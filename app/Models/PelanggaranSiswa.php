@@ -16,13 +16,7 @@ class PelanggaranSiswa extends Model
      * @var string
      */
     protected $table = 'pelanggaran_siswa';
-
-    /**
-     * Atribut yang dapat diisi secara massal.
-     *
-     * @var array
-     */
-    protected $fillable = ['siswa_user_id', 'pelanggaran_id', 'tanggal', 'keterangan'];
+    protected $fillable = ['siswa_user_id', 'pelanggaran_id', 'pelapor_user_id', 'tanggal', 'keterangan'];
 
     /**
      * Mendapatkan data pelanggaran (aturan) yang terkait.
@@ -39,5 +33,12 @@ class PelanggaranSiswa extends Model
     {
         return $this->belongsTo(User::class, 'siswa_user_id');
     }
-}
 
+    /**
+     * Mendapatkan data user (guru/admin) yang melaporkan pelanggaran.
+     */
+    public function pelapor(): BelongsTo // <-- TAMBAHKAN RELASI INI
+    {
+        return $this->belongsTo(User::class, 'pelapor_user_id');
+    }
+}

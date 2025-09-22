@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Providers\RouteServiceProvider;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -22,19 +23,25 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
-    {
-        $request->authenticate();
+    
+public function store(LoginRequest $request): RedirectResponse
+{
+    $request->authenticate();
 
-        $request->session()->regenerate();
-    
-        // TAMBAHKAN LOGIKA INI
-        if ($request->user()->role === 'admin') {
-            return redirect()->intended(route('admin.dashboard')); 
-        }
-    
-        return redirect()->intended(RouteServiceProvider::HOME); // HOME defaultnya '/dashboard'
+    $request->session()->regenerate();
+
+    // --- LOGIKA TAMBAHAN DIMULAI DI SINI ---
+    $user = $request->user();
+
+    if ($user->role === 'guru_bk') {
+        // Jika rolenya adalah guru_bk, arahkan ke dashboard admin
+        return redirect()->route('admin.dashboard');
     }
+    
+    // Jika tidak, arahkan ke halaman default (dashboard siswa)
+    return redirect()->intended(RouteServiceProvider::HOME);
+    // --- LOGIKA TAMBAHAN SELESAI ---
+}
     /**
      * Destroy an authenticated session.
      */
