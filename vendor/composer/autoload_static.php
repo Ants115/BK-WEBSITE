@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitbdc6d92507d397adf1c269ed49ec424d
+class ComposerStaticInit90ba1bfa56afef0cd88d7d3c0cdcf358
 {
     public static $files = array (
         '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
@@ -573,9 +573,12 @@ class ComposerStaticInitbdc6d92507d397adf1c269ed49ec424d
     );
 
     public static $classMap = array (
+        'App\\Http\\Controllers\\Admin\\ArsipAlumniController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/ArsipAlumniController.php',
         'App\\Http\\Controllers\\Admin\\DashboardController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/DashboardController.php',
         'App\\Http\\Controllers\\Admin\\KelasController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/KelasController.php',
+        'App\\Http\\Controllers\\Admin\\KenaikanKelasController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/KenaikanKelasController.php',
         'App\\Http\\Controllers\\Admin\\PelanggaranController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/PelanggaranController.php',
+        'App\\Http\\Controllers\\Admin\\PelanggaranSiswaController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/PelanggaranSiswaController.php',
         'App\\Http\\Controllers\\Admin\\SiswaController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/SiswaController.php',
         'App\\Http\\Controllers\\Auth\\AuthenticatedSessionController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/AuthenticatedSessionController.php',
         'App\\Http\\Controllers\\Auth\\ConfirmablePasswordController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/ConfirmablePasswordController.php',
@@ -587,6 +590,7 @@ class ComposerStaticInitbdc6d92507d397adf1c269ed49ec424d
         'App\\Http\\Controllers\\Auth\\RegisteredUserController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/RegisteredUserController.php',
         'App\\Http\\Controllers\\Auth\\VerifyEmailController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/VerifyEmailController.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
+        'App\\Http\\Controllers\\NotifikasiController' => __DIR__ . '/../..' . '/app/Http/Controllers/NotifikasiController.php',
         'App\\Http\\Controllers\\ProfileController' => __DIR__ . '/../..' . '/app/Http/Controllers/ProfileController.php',
         'App\\Http\\Controllers\\Siswa\\DashboardController' => __DIR__ . '/../..' . '/app/Http/Controllers/Siswa/DashboardController.php',
         'App\\Http\\Requests\\Auth\\LoginRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Auth/LoginRequest.php',
@@ -594,10 +598,12 @@ class ComposerStaticInitbdc6d92507d397adf1c269ed49ec424d
         'App\\Http\\Requests\\StorePelanggaranRequest' => __DIR__ . '/../..' . '/app/Http/Requests/StorePelanggaranRequest.php',
         'App\\Models\\BiodataSiswa' => __DIR__ . '/../..' . '/app/Models/BiodataSiswa.php',
         'App\\Models\\BiodataStaf' => __DIR__ . '/../..' . '/app/Models/BiodataStaf.php',
+        'App\\Models\\Notifikasi' => __DIR__ . '/../..' . '/app/Models/Notifikasi.php',
         'App\\Models\\Pelanggaran' => __DIR__ . '/../..' . '/app/Models/Pelanggaran.php',
         'App\\Models\\PelanggaranSiswa' => __DIR__ . '/../..' . '/app/Models/PelanggaranSiswa.php',
         'App\\Models\\Tingkatan' => __DIR__ . '/../..' . '/app/Models/Tingkatan.php',
         'App\\Models\\User' => __DIR__ . '/../..' . '/app/Models/User.php',
+        'App\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AppServiceProvider.php',
         'App\\View\\Components\\AppLayout' => __DIR__ . '/../..' . '/app/View/Components/AppLayout.php',
         'App\\View\\Components\\GuestLayout' => __DIR__ . '/../..' . '/app/View/Components/GuestLayout.php',
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
@@ -7116,9 +7122,9 @@ class ComposerStaticInitbdc6d92507d397adf1c269ed49ec424d
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInitbdc6d92507d397adf1c269ed49ec424d::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInitbdc6d92507d397adf1c269ed49ec424d::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInitbdc6d92507d397adf1c269ed49ec424d::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit90ba1bfa56afef0cd88d7d3c0cdcf358::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit90ba1bfa56afef0cd88d7d3c0cdcf358::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit90ba1bfa56afef0cd88d7d3c0cdcf358::$classMap;
 
         }, null, ClassLoader::class);
     }

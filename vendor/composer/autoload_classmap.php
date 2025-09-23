@@ -6,9 +6,12 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'App\\Http\\Controllers\\Admin\\ArsipAlumniController' => $baseDir . '/app/Http/Controllers/Admin/ArsipAlumniController.php',
     'App\\Http\\Controllers\\Admin\\DashboardController' => $baseDir . '/app/Http/Controllers/Admin/DashboardController.php',
     'App\\Http\\Controllers\\Admin\\KelasController' => $baseDir . '/app/Http/Controllers/Admin/KelasController.php',
+    'App\\Http\\Controllers\\Admin\\KenaikanKelasController' => $baseDir . '/app/Http/Controllers/Admin/KenaikanKelasController.php',
     'App\\Http\\Controllers\\Admin\\PelanggaranController' => $baseDir . '/app/Http/Controllers/Admin/PelanggaranController.php',
+    'App\\Http\\Controllers\\Admin\\PelanggaranSiswaController' => $baseDir . '/app/Http/Controllers/Admin/PelanggaranSiswaController.php',
     'App\\Http\\Controllers\\Admin\\SiswaController' => $baseDir . '/app/Http/Controllers/Admin/SiswaController.php',
     'App\\Http\\Controllers\\Auth\\AuthenticatedSessionController' => $baseDir . '/app/Http/Controllers/Auth/AuthenticatedSessionController.php',
     'App\\Http\\Controllers\\Auth\\ConfirmablePasswordController' => $baseDir . '/app/Http/Controllers/Auth/ConfirmablePasswordController.php',
@@ -20,6 +23,7 @@ return array(
     'App\\Http\\Controllers\\Auth\\RegisteredUserController' => $baseDir . '/app/Http/Controllers/Auth/RegisteredUserController.php',
     'App\\Http\\Controllers\\Auth\\VerifyEmailController' => $baseDir . '/app/Http/Controllers/Auth/VerifyEmailController.php',
     'App\\Http\\Controllers\\Controller' => $baseDir . '/app/Http/Controllers/Controller.php',
+    'App\\Http\\Controllers\\NotifikasiController' => $baseDir . '/app/Http/Controllers/NotifikasiController.php',
     'App\\Http\\Controllers\\ProfileController' => $baseDir . '/app/Http/Controllers/ProfileController.php',
     'App\\Http\\Controllers\\Siswa\\DashboardController' => $baseDir . '/app/Http/Controllers/Siswa/DashboardController.php',
     'App\\Http\\Requests\\Auth\\LoginRequest' => $baseDir . '/app/Http/Requests/Auth/LoginRequest.php',
@@ -27,10 +31,12 @@ return array(
     'App\\Http\\Requests\\StorePelanggaranRequest' => $baseDir . '/app/Http/Requests/StorePelanggaranRequest.php',
     'App\\Models\\BiodataSiswa' => $baseDir . '/app/Models/BiodataSiswa.php',
     'App\\Models\\BiodataStaf' => $baseDir . '/app/Models/BiodataStaf.php',
+    'App\\Models\\Notifikasi' => $baseDir . '/app/Models/Notifikasi.php',
     'App\\Models\\Pelanggaran' => $baseDir . '/app/Models/Pelanggaran.php',
     'App\\Models\\PelanggaranSiswa' => $baseDir . '/app/Models/PelanggaranSiswa.php',
     'App\\Models\\Tingkatan' => $baseDir . '/app/Models/Tingkatan.php',
     'App\\Models\\User' => $baseDir . '/app/Models/User.php',
+    'App\\Providers\\AppServiceProvider' => $baseDir . '/app/Providers/AppServiceProvider.php',
     'App\\View\\Components\\AppLayout' => $baseDir . '/app/View/Components/AppLayout.php',
     'App\\View\\Components\\GuestLayout' => $baseDir . '/app/View/Components/GuestLayout.php',
     'Attribute' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',

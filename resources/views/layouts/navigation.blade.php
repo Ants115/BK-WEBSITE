@@ -20,11 +20,20 @@
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                             {{ __('Admin Dashboard') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('admin.siswa.index')" :active="request()->routeIs('admin.siswa.*')">
+                        <x-nav-link :href="route('admin.siswa.index')" :active="request()->routeIs('admin.siswa.index') || request()->routeIs('admin.siswa.show') || request()->routeIs('admin.siswa.edit') || request()->routeIs('admin.siswa.create')">
                             {{ __('Daftar Siswa') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.siswa.penyesuaian')" :active="request()->routeIs('admin.siswa.penyesuaian')">
+                            {{ __('Penyesuaian Kelas') }}
                         </x-nav-link>
                         <x-nav-link :href="route('admin.pelanggaran.index')" :active="request()->routeIs('admin.pelanggaran.*')">
                             {{ __('Manajemen Pelanggaran') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.kenaikan-kelas.index')" :active="request()->routeIs('admin.kenaikan-kelas.index')">
+                            {{ __('Kenaikan Kelas') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.arsip.index')" :active="request()->routeIs('admin.arsip.*')">
+                            {{ __('Arsip Alumni') }}
                         </x-nav-link>
                     @else
                         {{-- MENU UNTUK SISWA --}}
@@ -36,6 +45,11 @@
             </div>
 
             <div class="hidden sm:flex sm:items-center sm:ms-6">
+                @if(Auth::user()->role === 'siswa' && Auth::user()->biodataSiswa?->status === 'Aktif')
+                    <div class="ms-3 relative">
+                        </div>
+                @endif
+                
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -52,12 +66,9 @@
                         <x-dropdown-link :href="route('profile.edit')">
                             {{ __('Profile') }}
                         </x-dropdown-link>
-
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                                this.closest('form').submit();">
+                            <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
                                 {{ __('Log Out') }}
                             </x-dropdown-link>
                         </form>
@@ -79,21 +90,14 @@
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
             @if (Auth::user()->role === 'guru_bk')
-                {{-- MENU RESPONSIVE UNTUK GURU BK / ADMIN --}}
-                <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                    {{ __('Admin Dashboard') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.siswa.index')" :active="request()->routeIs('admin.siswa.*')">
-                    {{ __('Daftar Siswa') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.pelanggaran.index')" :active="request()->routeIs('admin.pelanggaran.*')">
-                    {{ __('Manajemen Pelanggaran') }}
-                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')"> {{ __('Admin Dashboard') }} </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.siswa.index')" :active="request()->routeIs('admin.siswa.*')"> {{ __('Daftar Siswa') }} </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.siswa.penyesuaian')" :active="request()->routeIs('admin.siswa.penyesuaian')"> {{ __('Penyesuaian Kelas') }} </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.pelanggaran.index')" :active="request()->routeIs('admin.pelanggaran.*')"> {{ __('Manajemen Pelanggaran') }} </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.kenaikan-kelas.index')" :active="request()->routeIs('admin.kenaikan-kelas.index')"> {{ __('Kenaikan Kelas') }} </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.arsip.index')" :active="request()->routeIs('admin.arsip.*')"> {{ __('Arsip Alumni') }} </x-responsive-nav-link>
             @else
-                {{-- MENU RESPONSIVE UNTUK SISWA --}}
-                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                    {{ __('Dashboard') }}
-                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')"> {{ __('Dashboard') }} </x-responsive-nav-link>
             @endif
         </div>
 
@@ -102,17 +106,13 @@
                 <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
                 <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
             </div>
-
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
-
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
+                    <x-responsive-nav-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
                         {{ __('Log Out') }}
                     </x-responsive-nav-link>
                 </form>

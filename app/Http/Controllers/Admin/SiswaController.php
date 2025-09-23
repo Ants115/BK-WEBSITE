@@ -11,60 +11,29 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
-// use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Kelas;
 
 class SiswaController extends Controller
 {
     /**
      * Menampilkan daftar semua siswa.
      */
-    public function createSuratPanggilan(User $siswa): View
-    {
-        if ($siswa->role !== 'siswa') {
-            abort(404);
-        }
-
-        return view('admin.siswa.create-surat-panggilan', compact('siswa'));
-    }
-
-    /**
-     * Memproses dan membuat PDF surat panggilan dengan pesan kustom.
-     */
-    public function cetakSuratPanggilan(Request $request, User $siswa)
-    {
-        if ($siswa->role !== 'siswa') {
-            abort(404);
-        }
-
-        // Validasi bahwa pesan harus diisi
-        $validated = $request->validate([
-            'pesan' => 'required|string|min:20',
-        ]);
-
-        $data = [
-            'siswa' => $siswa,
-            'pesan' => $validated['pesan'], // Gunakan pesan dari form
-            'tanggalCetak' => now()->isoFormat('D MMMM YYYY'),
-        ];
-
-        // Ganti 'return view' menjadi 'Pdf::loadView' jika DOMPDF sudah siap
-        // $pdf = Pdf::loadView('admin.siswa.template-surat-panggilan', $data);
-        // return $pdf->stream('surat-panggilan-'. $siswa->name .'.pdf');
-        
-        return view('admin.siswa.template-surat-panggilan', $data);
-    }
     public function index(Request $request): View
     {
-        $search = $request->input('search');
-        $query = User::where('role', 'siswa')->with('biodataSiswa.kelas');
+        $search = $request->query('search');
+        $query = User::where('role', 'siswa')->whereHas('biodataSiswa', function ($q) {
+            $q->where('status', 'Aktif');
+        });
 
         if ($search) {
-            $query->where('name', 'like', '%' . $search . '%')
-                  ->orWhereHas('biodataSiswa', function ($q) use ($search) {
-                      $q->where('nis', 'like', '%' . $search . '%');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhereHas('biodataSiswa', function ($subq) use ($search) {
+                      $subq->where('nis', 'like', '%' . $search . '%');
                   });
+            });
         }
-        $siswas = $query->latest()->paginate(10);
+        $siswas = $query->with('biodataSiswa.kelas')->paginate(15);
         return view('admin.siswa.index', compact('siswas', 'search'));
     }
 
@@ -73,10 +42,8 @@ class SiswaController extends Controller
      */
     public function create(): View
     {
-        // Jika Anda perlu dropdown kelas di form, aktifkan baris di bawah
-        // $kelas = \App\Models\Kelas::all();
-        // return view('admin.siswa.create', compact('kelas'));
-        return view('admin.siswa.create');
+        $kelas = \App\Models\Kelas::all();
+        return view('admin.siswa.create', compact('kelas'));
     }
 
     /**
@@ -137,10 +104,8 @@ class SiswaController extends Controller
      */
     public function edit(User $siswa): View
     {
-        // Jika Anda perlu dropdown kelas di form, aktifkan baris di bawah
-        // $kelas = \App\Models\Kelas::all();
-        // return view('admin.siswa.edit', compact('siswa', 'kelas'));
-        return view('admin.siswa.edit', compact('siswa'));
+        $kelas = \App\Models\Kelas::all();
+        return view('admin.siswa.edit', compact('siswa', 'kelas'));
     }
  
     /**
@@ -182,6 +147,36 @@ class SiswaController extends Controller
     }
     
     /**
+     * Menampilkan form untuk membuat surat panggilan.
+     */
+    public function createSuratPanggilan(User $siswa): View
+    {
+        if ($siswa->role !== 'siswa') {
+            abort(404);
+        }
+
+        return view('admin.siswa.create-surat-panggilan', compact('siswa'));
+    }
+
+    /**
+     * Memproses dan membuat PDF surat panggilan dengan pesan kustom.
+     */
+    public function cetakSuratPanggilan(Request $request, User $siswa)
+    {
+        if ($siswa->role !== 'siswa') {
+            abort(404);
+        }
+        $validated = $request->validate(['pesan' => 'required|string|min:20']);
+        $data = [
+            'siswa' => $siswa,
+            'pesan' => $validated['pesan'],
+            'tanggalCetak' => now()->isoFormat('D MMMM YYYY'),
+        ];
+        $pdf = Pdf::loadView('admin.siswa.template-surat-panggilan', $data);
+        return $pdf->stream('surat-panggilan-'. $siswa->name .'.pdf');
+    }
+
+    /**
      * Membuat dan menampilkan file PDF Surat Peringatan.
      */
     public function cetakSuratPeringatan(User $siswa)
@@ -189,12 +184,8 @@ class SiswaController extends Controller
         if ($siswa->role !== 'siswa') {
             abort(404);
         }
-
         $siswa->load(['biodataSiswa.kelas', 'pelanggaranSiswa.pelanggaran']);
-
-        $totalPoin = $siswa->pelanggaranSiswa->sum(function ($item) {
-            return $item->pelanggaran->poin ?? 0;
-        });
+        $totalPoin = $siswa->pelanggaranSiswa->sum(fn ($item) => $item->pelanggaran->poin ?? 0);
 
         $jenisSurat = null;
         if ($totalPoin >= 100) $jenisSurat = 'Surat Peringatan 3';
@@ -210,9 +201,68 @@ class SiswaController extends Controller
             'jenisSurat' => $jenisSurat,
             'tanggalCetak' => now()->isoFormat('D MMMM Y'),
         ];
-        
-        // return view('admin.siswa.template-surat', $data);
         $pdf = Pdf::loadView('admin.siswa.template-surat', $data);
         return $pdf->stream('surat-peringatan-'. $siswa->name .'.pdf');
     }
+
+    // ======================================================================
+    // == METHOD BARU UNTUK FITUR PENYESUAIAN KELAS ==
+    // ======================================================================
+
+    /**
+     * Menampilkan halaman form untuk penyesuaian kelas siswa.
+     */
+    public function showPenyesuaianForm(Request $request): View
+    {
+        $query = $request->input('search');
+        $siswas = collect(); 
+
+        if ($query) {
+            $siswas = User::where('role', 'siswa')
+                ->where(function($q) use ($query) {
+                    $q->where('name', 'LIKE', "%{$query}%")
+                      ->orWhereHas('biodataSiswa', function($subQ) use ($query) {
+                          $subQ->where('nis', 'LIKE', "%{$query}%");
+                      });
+                })
+                ->with(['biodataSiswa.kelas.tingkatan'])
+                ->get();
+        }
+
+        // PERBAIKAN: Hanya gunakan satu tanda dolar ($)
+        $kelasPerTingkat = Kelas::orderBy('nama_kelas')
+                                ->get()
+                                ->groupBy('tingkatan_id');
+        
+        return view('admin.siswa.penyesuaian', [
+            'siswas' => $siswas,
+            'kelasPerTingkat' => $kelasPerTingkat,
+            'query' => $query
+        ]);
+    }
+
+    /**
+     * Memproses pemindahan satu siswa ke kelas baru.
+     */
+    public function updateKelas(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'kelas_id' => 'required|exists:kelas,id',
+        ]);
+
+        $user = User::findOrFail($validated['user_id']);
+
+        if ($user->biodataSiswa) {
+            $user->biodataSiswa->update([
+                'kelas_id' => $validated['kelas_id']
+            ]);
+
+            return redirect()->route('admin.siswa.penyesuaian', ['search' => $user->name])
+                             ->with('success', "Kelas siswa '{$user->name}' berhasil diperbarui.");
+        }
+
+        return redirect()->back()->with('error', 'Gagal memperbarui kelas: data biodata siswa tidak ditemukan.');
+    }
 }
+

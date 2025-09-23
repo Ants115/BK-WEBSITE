@@ -40,13 +40,14 @@
                                             <a href="{{ route('admin.pelanggaran.edit', $pelanggaran->id) }}" class="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600">
                                                 Edit
                                             </a>
-                                            <form action="{{ route('admin.pelanggaran.destroy', $pelanggaran->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus ini?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
+                                                  <button type="button"
+                                                    @click="$dispatch('open-confirm-modal', {
+                                                        action: '{{ route('admin.pelanggaran.destroy', $pelanggaran->id) }}',
+                                                        message: 'Anda yakin ingin menghapus pelanggaran \'{{ addslashes($pelanggaran->nama_pelanggaran) }}\'?'
+                                                    })"
+                                                    class="text-red-600 hover:underline">
                                                     Hapus
                                                 </button>
-                                            </form>
                                         </div>
                                     </td>
                                 </tr>

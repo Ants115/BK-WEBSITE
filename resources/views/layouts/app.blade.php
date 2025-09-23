@@ -32,5 +32,6 @@
                 {{ $slot }}
             </main>
         </div>
+        <x-confirm-delete-modal /> {{-- <-- TAMBAHKAN BARIS INI --}}
     </body>
 </html>
