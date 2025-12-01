@@ -89,12 +89,12 @@ Project ini adalah aplikasi web bimbingan konseling (BK) untuk mengelola data si
 
 git switch master
 # atau
-git checkout master
-composer install
-cp .env.example .env (jika menggunakan mac/linux)
-copy .env.example .env (jika menggunakan windows)
-php artisan key:generate
-php artisan migrate --seed
-npm install
-npm run dev
-php artisan serve
+- git checkout master
+- composer install
+- cp .env.example .env (jika menggunakan mac/linux)
+- copy .env.example .env (jika menggunakan windows)
+- php artisan key:generate
+- php artisan migrate --seed
+- npm install
+- npm run dev
+- php artisan serve
