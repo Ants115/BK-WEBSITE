@@ -22,6 +22,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call([
+            AdminUserSeeder::class,
+        ]);
+        
         // Matikan pengecekan foreign key agar bisa truncate (bersihkan) tabel
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
@@ -46,5 +50,21 @@ class DatabaseSeeder extends Seeder
 
         // 4. Aktifkan kembali pengecekan foreign key
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        User::create([
+            'name' => 'Bu Rani',
+            'email' => 'rani.bk@sekolah.com',
+            'password' => Hash::make('password'),
+            'role' => 'guru_bk',
+        ]);
+        
+        User::create([
+            'name' => 'Pak Dimas',
+            'email' => 'dimas.bk@sekolah.com',
+            'password' => Hash::make('password'),
+            'role' => 'guru_bk',
+        ]);
+        
     }
+
+
 }

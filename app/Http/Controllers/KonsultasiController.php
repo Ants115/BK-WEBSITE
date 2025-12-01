@@ -21,12 +21,16 @@ class KonsultasiController extends Controller
      */
     public function create()
     {
-        // Ambil semua guru BK
-        $guruList = User::where('role', 'bk')->get();
-
+        // Ambil semua akun dengan role guru_bk
+        $guruList = User::where('role', 'guru_bk')
+                        ->orderBy('name')
+                        ->get();
+    
         return view('konsultasi.create', compact('guruList'));
     }
-
+    
+    
+    
     /**
      * Menyimpan permintaan janji temu baru dari siswa.
      */
