@@ -4,8 +4,16 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\User; // <-- PENTING: Import model User
-use App\Models\BiodataSiswa; // <-- PENTING: Import model BiodataSiswa
+use App\Models\User;
+use App\Models\BiodataSiswa;
+use App\Models\BiodataStaf;
+use App\Models\Kelas;
+use App\Models\Tingkatan;
+use App\Models\Jurusan;
+use App\Models\Pelanggaran;
+use App\Models\PelanggaranSiswa;
+use App\Models\Notifikasi;
+use Illuminate\Support\Facades\DB; 
 
 class DatabaseSeeder extends Seeder
 {
@@ -14,29 +22,29 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Panggil semua seeder untuk data master terlebih dahulu
+        // Matikan pengecekan foreign key agar bisa truncate (bersihkan) tabel
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
+        // 2. Bersihkan semua tabel terkait untuk memulai dari awal
+        User::truncate();
+        BiodataSiswa::truncate();
+        BiodataStaf::truncate();
+        Kelas::truncate();
+        Tingkatan::truncate();
+        Jurusan::truncate();
+        Pelanggaran::truncate();
+        
+        // 3. Panggil semua seeder yang dibutuhkan secara berurutan
+        // Pastikan file-file seeder ini ADA di folder database/seeders
         $this->call([
             TingkatanSeeder::class,
             JurusanSeeder::class,
-            AdminUserSeeder::class,
+            KelasSeeder::class,
             PelanggaranSeeder::class,
-            KelasSeeder::class, // Pastikan KelasSeeder juga dipanggil
+            AdminUserSeeder::class, 
         ]);
 
-        // 2. Buat satu user siswa untuk testing
-        $userSiswa = User::factory()->create([
-            'name' => 'Siswa Contoh',
-            'email' => 'siswa@example.com',
-            'role' => 'siswa',
-        ]);
-
-        // 3. Buat biodata untuk user siswa tersebut
-        // Pastikan ada kelas dengan ID=1 di database dari KelasSeeder
-        BiodataSiswa::create([
-            'user_id' => $userSiswa->id,
-            'nis' => '12345678',
-            'nama_lengkap' => $userSiswa->name,
-            'kelas_id' => 1, 
-        ]);
+        // 4. Aktifkan kembali pengecekan foreign key
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 }

@@ -15,10 +15,9 @@ class KenaikanKelasController extends Controller
      */
     public function index()
     {
-        // 1. Ambil semua ID kelas unik dari siswa yang statusnya BUKAN 'Lulus'
-        $idKelasYangAdaSiswa = BiodataSiswa::select('kelas_id')
-                                          ->whereNotNull('kelas_id')
-                                          ->where('status', '!=', 'Lulus') // <-- INI PERBAIKANNYA ✅
+        // Query ini sekarang akan berjalan dengan benar
+        $idKelasYangAdaSiswa = BiodataSiswa::whereNotNull('kelas_id')
+                                          ->where('status', 'Aktif')
                                           ->distinct()
                                           ->pluck('kelas_id');
         

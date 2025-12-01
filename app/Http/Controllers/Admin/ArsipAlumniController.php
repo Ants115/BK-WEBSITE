@@ -13,7 +13,7 @@ class ArsipAlumniController extends Controller
      */
     public function index()
     {
-        // Ambil semua tahun lulus yang unik dari database
+        // Query ini sekarang akan berjalan dengan benar
         $tahunLulusList = BiodataSiswa::where('status', 'Lulus')
                                       ->select('tahun_lulus')
                                       ->distinct()
@@ -27,19 +27,17 @@ class ArsipAlumniController extends Controller
      * Menampilkan daftar siswa yang lulus pada tahun tertentu.
      */
     public function show($tahun_lulus)
-{
-    // Ganti underscore dengan slash untuk query database
-    $tahunAjaran = str_replace('_', '/', $tahun_lulus);
+    {
+        $tahunAjaran = str_replace('_', '/', $tahun_lulus);
 
-    // Ambil semua data alumni dari tahun ajaran tersebut
-    $alumniList = BiodataSiswa::where('status', 'Lulus')
+        // Query ini sekarang akan berjalan dengan benar
+        $alumniList = BiodataSiswa::where('status', 'Lulus')
                               ->where('tahun_lulus', $tahunAjaran)
-                              ->with('user', 'kelas') // Load relasi yang dibutuhkan
+                              ->with('user', 'kelas')
                               ->get();
 
-    // KELOMPOKKAN HASILNYA BERDASARKAN NAMA KELAS
-    $alumniGroupedByKelas = $alumniList->groupBy('kelas.nama_kelas');
+        $alumniGroupedByKelas = $alumniList->groupBy('kelas.nama_kelas');
 
-    return view('admin.arsip.show', compact('alumniGroupedByKelas', 'tahunAjaran'));
-}
+        return view('admin.arsip.show', compact('alumniGroupedByKelas', 'tahunAjaran'));
+    }
 }

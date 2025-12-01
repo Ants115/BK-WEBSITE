@@ -15,15 +15,15 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Buat User untuk Login
+        // 1. Buat User untuk Login dengan role dan password yang benar
         $adminUser = User::create([
             'name' => 'Admin BK',
             'email' => 'admin@sekolah.com',
-            'password' => Hash::make('password'), // Passwordnya 'password'
-            'role' => 'admin',
+            'role' => 'guru_bk', // <-- Diperbaiki dari 'admin' menjadi 'guru_bk'
+            'password' => Hash::make('ant123'), // <-- Diperbaiki dari 'password' menjadi 'ant123'
         ]);
 
-        // Buat Biodata untuk Staf/Admin
+        // 2. Buat Biodata untuk Staf/Admin
         BiodataStaf::create([
             'user_id' => $adminUser->id,
             'nip' => '00001',
@@ -31,4 +31,4 @@ class AdminUserSeeder extends Seeder
             'jabatan' => 'Administrator Sistem',
         ]);
     }
-}
+}   

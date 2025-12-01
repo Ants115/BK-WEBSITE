@@ -1,61 +1,100 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# BK-WEBSITE  
+Sistem Informasi Bimbingan Konseling Sekolah
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Project ini adalah aplikasi web bimbingan konseling (BK) untuk mengelola data siswa, pelanggaran, prestasi, konseling, serta komunikasi antara guru BK dan siswa. Aplikasi dibuat sebagai bagian dari **Uji Kompetensi Keahlian (UKK)**.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## ✨ Fitur Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Manajemen Data Master**
+  - Tingkatan (kelas X, XI, XII, dsb.)
+  - Jurusan
+  - Kelas
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Manajemen Data Pengguna**
+  - Data siswa
+  - Data staf / guru BK
+  - (Opsional) Data orang tua / wali
 
-## Learning Laravel
+- **Manajemen Konseling**
+  - Pengajuan permohonan konseling oleh siswa
+  - Penjadwalan konseling oleh guru BK
+  - Pencatatan hasil / catatan konseling
+  - Riwayat konsultasi per siswa
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- **Manajemen Pelanggaran & Surat Peringatan**
+  - Pencatatan pelanggaran siswa
+  - Relasi pelanggaran dengan siswa dan kelas
+  - Pembuatan surat peringatan
+  - Rekap pelanggaran per siswa
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- **Manajemen Prestasi**
+  - Input data prestasi siswa
+  - Riwayat prestasi per siswa
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Pengumuman & Notifikasi**
+  - Pengumuman terkait kegiatan BK / sekolah
+  - Notifikasi internal aplikasi (misal: permohonan konseling baru, jadwal konseling, dsb.)
 
-## Laravel Sponsors
+- **Arsip & Kenaikan Kelas**
+  - Arsip alumni
+  - Proses kenaikan kelas siswa per tahun ajaran
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- **Dashboard**
+  - Dashboard guru BK (ringkasan jumlah siswa, pelanggaran, konsultasi, dsb.)
+  - Dashboard siswa (informasi pribadi, riwayat konseling, pelanggaran, pengumuman, dsb.)
 
-### Premium Partners
+- **Hak Akses / Role**
+  - Autentikasi (login / logout)
+  - Role pengguna, misalnya:
+    - `guru_bk` / admin
+    - `siswa`
+  - Menu dan fitur ditampilkan sesuai role
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## 🧰 Teknologi yang Digunakan
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- **Backend**: Laravel (lihat versi pada `composer.json`)
+- **Bahasa Pemrograman**: PHP
+- **Database**: MySQL / MariaDB
+- **Frontend**:
+  - Blade Template Engine
+  - Tailwind CSS
+  - Alpine.js (interaksi sederhana di frontend)
+- **Tools Pendukung**:
+  - Composer
+  - Node.js & NPM (untuk build asset jika diperlukan)
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## ⚙️ Kebutuhan Sistem
 
-## Security Vulnerabilities
+- PHP ≥ 8.1
+- Composer
+- MySQL / MariaDB
+- Node.js & NPM (opsional, untuk `npm run dev` / `npm run build`)
+- Git
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## 🔧 Instalasi Project Secara Lokal
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+1. **Clone repository**
+
+   ```bash
+   git clone https://github.com/Ants115/BK-WEBSITE.git
+   cd BK-WEBSITE
+
+git switch master
+# atau
+git checkout master
+composer install
+cp .env.example .env (jika menggunakan mac/linux)
+copy .env.example .env (jika menggunakan windows)
+php artisan key:generate
+php artisan migrate --seed
+npm install
+npm run dev
+php artisan serve

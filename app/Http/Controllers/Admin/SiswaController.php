@@ -33,7 +33,7 @@ class SiswaController extends Controller
                   });
             });
         }
-        $siswas = $query->with('biodataSiswa.kelas')->paginate(15);
+        $siswas = $query->with('biodataSiswa.kelas')->latest()->paginate(15);
         return view('admin.siswa.index', compact('siswas', 'search'));
     }
 

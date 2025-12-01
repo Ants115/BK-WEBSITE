@@ -5,13 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Str; // <-- 1. TAMBAHKAN BARIS INI untuk mengimpor helper Str
+use Illuminate\Support\Str;
 
 class Kelas extends Model
 {
     use HasFactory;
 
-    protected $table = 'kelas';
+    // Baris 'protected $table' dihapus. Laravel cukup pintar untuk tahu nama tabelnya adalah 'kelas'
     protected $fillable = ['tingkatan_id', 'jurusan_id', 'nama_unik', 'nama_kelas', 'tahun_ajaran'];
 
     public function tingkatan(): BelongsTo

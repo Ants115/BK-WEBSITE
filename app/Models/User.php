@@ -45,6 +45,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
             return $this->hasMany(PelanggaranSiswa::class, 'siswa_user_id');
         }
 
-       
+        public function prestasi()
+        {
+            return $this->hasMany(Prestasi::class, 'siswa_id');
+        }
         
     }

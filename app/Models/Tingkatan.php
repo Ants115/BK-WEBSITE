@@ -9,6 +9,8 @@ class Tingkatan extends Model
 {
     use HasFactory;
 
-    protected $table = 'tingkatan';
+    // Dengan menghapus baris "protected $table", Laravel akan secara otomatis
+    // mencari nama tabel plural, yaitu "tingkatans", yang cocok dengan migrasi Anda.
+
     protected $fillable = ['nama_tingkatan'];
 }

@@ -3,45 +3,78 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\PelanggaranSiswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Carbon\Carbon;
+
+// Import Model
+use App\Models\User;
+use App\Models\PelanggaranSiswa;
+use App\Models\Pelanggaran;
+use App\Models\Konsultasi; 
 
 class DashboardController extends Controller
 {
     public function index(): View
     {
-        // --- DATA STATISTIK DASAR ---
-        $totalSiswaAktif = User::where('role', 'siswa')
-                               ->whereHas('biodataSiswa', fn($q) => $q->where('status', 'Aktif'))
-                               ->count();
+        // ==========================================
+        // BAGIAN 1: STATISTIK PELANGGARAN
+        // ==========================================
+
+        // 1. Data Statistik Dasar
+        // PERBAIKAN: Mengganti nama variabel agar sesuai dengan View ($totalSiswa)
+        $totalSiswaAktif = User::where('role', 'siswa')->count();
         $totalPelanggaran = PelanggaranSiswa::count();
 
-        // --- DATA SISWA POIN TERTINGGI (TOP 5) ---
-        $siswaPoinTertinggi = PelanggaranSiswa::join('users', 'pelanggaran_siswa.siswa_user_id', '=', 'users.id')
-            ->join('pelanggaran', 'pelanggaran_siswa.pelanggaran_id', '=', 'pelanggaran.id')
-            ->select('users.name', DB::raw('SUM(pelanggaran.poin) as total_poin'))
+        // 2. Data Siswa Poin Tertinggi (Top 5)
+        $siswaPoinTertinggi = User::where('role', 'siswa')
+            ->join('pelanggaran_siswas', 'users.id', '=', 'pelanggaran_siswas.siswa_user_id')
+            ->join('pelanggarans', 'pelanggaran_siswas.pelanggaran_id', '=', 'pelanggarans.id')
+            ->select('users.name', DB::raw('SUM(pelanggarans.poin) as total_poin'))
             ->groupBy('users.id', 'users.name')
             ->orderByDesc('total_poin')
             ->limit(5)
             ->get();
 
-        // --- DATA PELANGGARAN TERATAS (TOP 5) ---
-        $pelanggaranTeratas = PelanggaranSiswa::join('pelanggaran', 'pelanggaran_siswa.pelanggaran_id', '=', 'pelanggaran.id')
-            ->select('pelanggaran.nama_pelanggaran', DB::raw('COUNT(pelanggaran_siswa.id) as jumlah_kasus'))
-            ->groupBy('pelanggaran.id', 'pelanggaran.nama_pelanggaran')
+        // 3. Data Pelanggaran Teratas (Top 5)
+        $pelanggaranTeratas = Pelanggaran::withCount('pelanggaranSiswa as jumlah_kasus')
             ->orderByDesc('jumlah_kasus')
             ->limit(5)
             ->get();
+
+        // ==========================================
+        // BAGIAN 2: STATISTIK KONSULTASI
+        // ==========================================
+
+        // 4. Hitung Permintaan Baru
+        $permintaanBaru = Konsultasi::where('status', 'Menunggu Persetujuan')->count();
+
+        // 5. Hitung Jadwal Hari Ini
+        $jadwalHariIni = Konsultasi::where('status', 'Disetujui')
+            ->whereDate('jadwal_disetujui', Carbon::today())
+            ->count();
+
+        // 6. Ambil 5 Jadwal Terdekat
+        $jadwalTerdekat = Konsultasi::where('status', 'Disetujui')
+            ->where('jadwal_disetujui', '>=', now())
+            ->with('siswa')
+            ->orderBy('jadwal_disetujui', 'asc')
+            ->limit(5)
+            ->get();
+
+        // ==========================================
+        // BAGIAN 3: PENGIRIMAN DATA KE VIEW
+        // ==========================================
         
-        // Kirim semua data ke view
         return view('admin.dashboard', compact(
-            'totalSiswaAktif',
+           'totalSiswaAktif',
             'totalPelanggaran',
             'siswaPoinTertinggi',
-            'pelanggaranTeratas'
+            'pelanggaranTeratas',
+            'permintaanBaru',
+            'jadwalHariIni',
+            'jadwalTerdekat'
         ));
     }
 }

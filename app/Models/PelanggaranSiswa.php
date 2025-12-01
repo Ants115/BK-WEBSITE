@@ -10,12 +10,7 @@ class PelanggaranSiswa extends Model
 {
     use HasFactory;
 
-    /**
-     * Nama tabel yang terkait dengan model.
-     *
-     * @var string
-     */
-    protected $table = 'pelanggaran_siswa';
+    // Baris 'protected $table' dihapus agar Laravel otomatis mencari tabel 'pelanggaran_siswas'
     protected $fillable = ['siswa_user_id', 'pelanggaran_id', 'pelapor_user_id', 'tanggal', 'keterangan'];
 
     /**
@@ -34,11 +29,9 @@ class PelanggaranSiswa extends Model
         return $this->belongsTo(User::class, 'siswa_user_id');
     }
 
-    /**
-     * Mendapatkan data user (guru/admin) yang melaporkan pelanggaran.
-     */
-    public function pelapor(): BelongsTo // <-- TAMBAHKAN RELASI INI
+    public function pelapor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'pelapor_user_id');
     }
 }
+

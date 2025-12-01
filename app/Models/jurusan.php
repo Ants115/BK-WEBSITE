@@ -9,6 +9,6 @@ class Jurusan extends Model
 {
     use HasFactory;
 
-    protected $table = 'jurusan';
+    // Baris 'protected $table' dihapus agar Laravel otomatis mencari tabel 'jurusans'
     protected $fillable = ['nama_jurusan', 'singkatan'];
 }

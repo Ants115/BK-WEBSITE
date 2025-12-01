@@ -13,29 +13,28 @@ class BiodataSiswa extends Model
     /**
      * Memberitahu Laravel nama tabel yang benar untuk model ini.
      */
-    protected $table = 'biodata_siswa'; // <-- TAMBAHKAN BARIS INI
+    protected $table = 'biodata_siswa';
 
     /**
      * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
+     * Diperbaiki: Melengkapi semua kolom yang bisa diisi.
      */
     protected $fillable = [
         'user_id',
         'nis',
         'nama_lengkap',
         'kelas_id',
+        'alamat',
+        'no_telepon',
     ];
 
     /**
      * Mendefinisikan relasi ke model Kelas.
      */
-
-     public function kelas(): BelongsTo
-     {
-         return $this->belongsTo(Kelas::class, 'kelas_id');
-     }
-     
+    public function kelas(): BelongsTo
+    {
+        return $this->belongsTo(Kelas::class, 'kelas_id');
+    }
     
     /**
      * Mendefinisikan relasi ke model User.
