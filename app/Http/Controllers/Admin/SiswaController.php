@@ -84,19 +84,45 @@ class SiswaController extends Controller
             abort(404);
         }
 
-        $siswa->load(['biodataSiswa.kelas', 'pelanggaranSiswa.pelanggaran', 'pelanggaranSiswa.pelapor']);
+        // Load relasi yang dibutuhkan
+        $siswa->load([
+            'biodataSiswa.kelas',
+            'pelanggaranSiswa.pelanggaran',
+            'pelanggaranSiswa.pelapor',
+            'prestasi', // tambahan: relasi prestasi
+        ]);
+
         $masterPelanggaran = Pelanggaran::orderBy('nama_pelanggaran')->get();
 
+        // Hitung total poin pelanggaran
         $totalPoin = $siswa->pelanggaranSiswa->sum(function ($item) {
             return $item->pelanggaran->poin ?? 0;
         });
         
         $jenisSurat = null;
-        if ($totalPoin >= 100) $jenisSurat = 'Surat Peringatan 3';
-        elseif ($totalPoin >= 50) $jenisSurat = 'Surat Peringatan 2';
-        elseif ($totalPoin >= 25) $jenisSurat = 'Surat Peringatan 1';
+        if ($totalPoin >= 100) {
+            $jenisSurat = 'Surat Peringatan 3';
+        } elseif ($totalPoin >= 50) {
+            $jenisSurat = 'Surat Peringatan 2';
+        } elseif ($totalPoin >= 25) {
+            $jenisSurat = 'Surat Peringatan 1';
+        }
 
-        return view('admin.siswa.show', compact('siswa', 'masterPelanggaran', 'totalPoin', 'jenisSurat'));
+        // Susun data prestasi (urutan terbaru di atas)
+        $prestasi = $siswa->prestasi()
+            ->orderBy('tanggal', 'desc')
+            ->get();
+
+        $totalPrestasi = $prestasi->count();
+
+        return view('admin.siswa.show', compact(
+            'siswa',
+            'masterPelanggaran',
+            'totalPoin',
+            'jenisSurat',
+            'prestasi',
+            'totalPrestasi'
+        ));
     }
 
     /**

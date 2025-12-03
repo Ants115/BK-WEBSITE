@@ -41,7 +41,7 @@
                                                     {{-- Logika untuk kelas XII --}}
                                                     @if($kelas->tingkatan->nama_tingkatan === 'XII')
                                                         <option value="lulus">Luluskan (Jadi Alumni)</option>
-                                                    
+
                                                     {{-- Logika untuk kelas X dan XI --}}
                                                     @else
                                                         {{-- Panggil fungsi cerdas yang kita buat di Model --}}
@@ -69,6 +69,7 @@
                                                             @endforeach
                                                         </optgroup>
                                                     @endif
+
                                                 </select>
                                                 <!-- ====================================================== -->
                                                 <!-- AKHIR DARI BAGIAN SELECT YANG DIPERBARUI -->

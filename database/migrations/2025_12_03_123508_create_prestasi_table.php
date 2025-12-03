@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('prestasi', function (Blueprint $table) {
@@ -13,24 +16,25 @@ return new class extends Migration
 
             // Relasi ke users (siswa)
             $table->foreignId('siswa_id')
-                  ->constrained('users')
-                  ->onDelete('cascade');
+                ->constrained('users')
+                ->onDelete('cascade');
 
-            // Data utama prestasi
-            $table->string('judul');            // Nama / judul prestasi
-            $table->string('tingkat');          // Sekolah / Kab/Kota / Provinsi / dst
-            $table->string('kategori');         // Akademik / Non-akademik
-
-            // Opsional / tambahan
+            // Data prestasi
+            $table->string('nama_prestasi');
+            $table->string('jenis')->nullable();         // akademik / non-akademik / lainnya
+            $table->string('tingkat')->nullable();       // Sekolah / Kab / Prov / Nasional / dll
+            $table->string('pencapaian')->nullable();    // Juara 1, Harapan, Peserta, dll
             $table->string('penyelenggara')->nullable();
             $table->date('tanggal')->nullable();
-            $table->string('bukti_foto')->nullable();
             $table->text('keterangan')->nullable();
 
             $table->timestamps();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('prestasi');

@@ -22,6 +22,7 @@
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
+
                     @forelse($riwayat as $item)
                         <div class="border-l-4 
                             @if($item->status == 'Menunggu Persetujuan') border-yellow-400
@@ -32,8 +33,12 @@
                             
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="font-bold text-lg text-gray-800">Konsultasi dengan: {{ $item->guru->name }}</p>
-                                    <p class="text-sm text-gray-600">Topik: {{ $item->topik }}</p>
+                                    <p class="font-bold text-lg text-gray-800">
+                                        Konsultasi dengan: {{ $item->guru->name }}
+                                    </p>
+                                    <p class="text-sm text-gray-600">
+                                        Topik: {{ $item->topik }}
+                                    </p>
                                 </div>
                                 <div class="text-right text-xs text-gray-400">
                                     {{ \Carbon\Carbon::parse($item->created_at)->diffForHumans() }}
@@ -60,7 +65,8 @@
                                 @endif
                             </div>
 
-                            @if($item->status == 'Disetujui' || $item->status == 'Dijadwalkan Ulang')
+                            {{-- Jadwal final tampil untuk Disetujui, Dijadwalkan Ulang, dan Selesai --}}
+                            @if(in_array($item->status, ['Disetujui', 'Dijadwalkan Ulang', 'Selesai']) && $item->jadwal_disetujui)
                                 <div class="mt-3 bg-blue-50 border border-blue-100 p-3 rounded text-blue-800 text-sm flex justify-between items-center">
                                     
                                     <div>
@@ -86,7 +92,8 @@
                                     <p class="text-sm text-gray-700 italic mt-1">"{{ $item->pesan_guru }}"</p>
                                 </div>
                             @endif
-                            <!-- Hasil Konseling (Muncul jika status Selesai) -->
+
+                            {{-- Hasil Konseling (muncul jika status Selesai) --}}
                             @if($item->status == 'Selesai' && $item->hasil_konseling)
                                 <div class="mt-3 p-4 bg-green-50 border border-green-200 rounded-md">
                                     <p class="text-xs font-bold text-green-700 uppercase tracking-wide mb-1">✅ Hasil Konseling:</p>

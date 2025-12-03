@@ -5,54 +5,78 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Kelas extends Model
 {
     use HasFactory;
 
-    // Baris 'protected $table' dihapus. Laravel cukup pintar untuk tahu nama tabelnya adalah 'kelas'
-    protected $fillable = ['tingkatan_id', 'jurusan_id', 'nama_unik', 'nama_kelas', 'tahun_ajaran'];
+    protected $table = 'kelas';
 
+    protected $fillable = [
+        'nama_kelas',
+        'tingkatan_id',
+        'jurusan_id',
+        'wali_kelas_id',
+    ];
+
+    /**
+     * Relasi ke Tingkatan (X, XI, XII).
+     */
     public function tingkatan(): BelongsTo
     {
         return $this->belongsTo(Tingkatan::class);
     }
-    
+
+    /**
+     * Relasi ke Jurusan (RPL, TKJ, dsb).
+     */
     public function jurusan(): BelongsTo
     {
         return $this->belongsTo(Jurusan::class);
     }
 
     /**
-     * Mencari dan mengembalikan data kelas yang paling mungkin
-     * menjadi tujuan kenaikan kelas berdasarkan pola nama.
-     * Logika ini berlaku untuk SEMUA JURUSAN.
-     * Contoh: dari 'X RPL 1' akan mencari 'XI RPL 1'
-     *
-     * @return Model|null
+     * Relasi ke wali kelas (User guru).
+     * Asumsi: kolom kelas.wali_kelas_id -> users.id
      */
-    public function getSuggestedNextClass()
+    public function waliKelas(): BelongsTo
     {
-        $this->loadMissing('tingkatan');
-        
-        $namaKelasSekarang = $this->nama_kelas;
-        $namaTingkatan = $this->tingkatan->nama_tingkatan;
-        $namaKelasTujuan = null;
+        return $this->belongsTo(User::class, 'wali_kelas_id');
+    }
 
-        if ($namaTingkatan === 'X' && str_starts_with($namaKelasSekarang, 'X ')) {
-            // 2. PERBAIKI BAGIAN INI: Gunakan Str::replaceFirst
-            $namaKelasTujuan = Str::replaceFirst('X ', 'XI ', $namaKelasSekarang);
-        }
-        elseif ($namaTingkatan === 'XI' && str_starts_with($namaKelasSekarang, 'XI ')) {
-            // DAN BAGIAN INI JUGA: Gunakan Str::replaceFirst
-            $namaKelasTujuan = Str::replaceFirst('XI ', 'XII ', $namaKelasSekarang);
+    /**
+     * Relasi ke biodata siswa di kelas ini.
+     */
+    public function biodataSiswa(): HasMany
+    {
+        return $this->hasMany(BiodataSiswa::class, 'kelas_id');
+    }
+
+    /**
+     * Alias untuk kompatibilitas kode lama.
+     */
+    public function biodataSiswas(): HasMany
+    {
+        return $this->hasMany(BiodataSiswa::class, 'kelas_id');
+        // atau: return $this->biodataSiswa();
+    }
+
+    /**
+     * Mengusulkan kelas tujuan untuk kenaikan kelas.
+     */
+    public function getSuggestedNextClass(): ?self
+    {
+        if (!$this->tingkatan_id) {
+            return null;
         }
 
-        if ($namaKelasTujuan) {
-            return static::firstWhere('nama_kelas', $namaKelasTujuan);
+        $query = self::where('tingkatan_id', $this->tingkatan_id + 1);
+
+        if (!is_null($this->jurusan_id ?? null)) {
+            $query->where('jurusan_id', $this->jurusan_id);
         }
 
-        return null;
+        return $query->orderBy('nama_kelas')->first();
     }
 }

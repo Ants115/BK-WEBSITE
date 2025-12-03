@@ -3,62 +3,69 @@
 namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
+use App\Models\Konsultasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
-
-// Import Model
-use App\Models\Konsultasi;
-// use App\Models\Notifikasi; // Kita gunakan notifikasi bawaan Laravel sekarang
 
 class DashboardController extends Controller
 {
     public function index(): View
     {
-        // 1. Ambil User yang sedang login beserta Biodatanya
-        $user = Auth::user()->load('biodataSiswa');
+        // Ambil user yang sedang login
+        $user = Auth::user();
 
-        // 2. CEK STATUS ALUMNI
-        // Jika statusnya 'Lulus', langsung tampilkan dashboard khusus alumni
+        // Preload relasi yang dibutuhkan di dashboard
+        $user->load([
+            'biodataSiswa.kelas.waliKelas',          // data siswa + kelas + wali kelas
+            'pelanggaranSiswa.pelanggaran',         // untuk hitung poin
+            'pelanggaranSiswa.pelapor',             // nama guru pencatat
+            'prestasi',                             // untuk menghitung total prestasi
+        ]);
+
+        // Jika statusnya 'Lulus', tampilkan dashboard alumni
         if ($user->biodataSiswa && $user->biodataSiswa->status === 'Lulus') {
             return view('alumni.dashboard', compact('user'));
         }
 
         // ==========================================
-        // LOGIKA BARU: KONSULTASI BK
+        // KONSULTASI BK
         // ==========================================
-        
-        // Cek jadwal konsultasi mendatang
-        $konsultasiMendatang = Konsultasi::where('siswa_id', $user->id)
-                                ->where('status', 'Disetujui')
-                                ->where('jadwal_disetujui', '>=', now())
-                                ->orderBy('jadwal_disetujui', 'asc')
-                                ->first();
 
-        // Hitung Total Pengajuan (Statistik)
+        // Cek jadwal konsultasi mendatang (disetujui & tanggal >= sekarang)
+        $konsultasiMendatang = Konsultasi::where('siswa_id', $user->id)
+            ->where('status', 'Disetujui')
+            ->where('jadwal_disetujui', '>=', now())
+            ->orderBy('jadwal_disetujui', 'asc')
+            ->first();
+
+        // Hitung total pengajuan konsultasi
         $totalPengajuan = Konsultasi::where('siswa_id', $user->id)->count();
 
         // ==========================================
-        // LOGIKA LAMA: PELANGGARAN & POIN
+        // PELANGGARAN & POIN
         // ==========================================
 
-        // Load relasi pelanggaran untuk menghitung poin
-        $user->load(['pelanggaranSiswa.pelanggaran', 'pelanggaranSiswa.pelapor']);
-
-        // Hitung Total Poin
         $totalPoin = $user->pelanggaranSiswa->sum(function ($item) {
             return $item->pelanggaran->poin ?? 0;
         });
 
         // ==========================================
+        // PRESTASI
+        // ==========================================
+
+        $totalPrestasi = $user->prestasi->count();
+
+        // ==========================================
         // RETURN VIEW
         // ==========================================
-        
+
         return view('dashboard', compact(
             'user',
             'totalPoin',
             'konsultasiMendatang',
-            'totalPengajuan'
+            'totalPengajuan',
+            'totalPrestasi',
         ));
     }
 }

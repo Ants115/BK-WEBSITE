@@ -4,15 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Konsultasi extends Model
 {
     use HasFactory;
 
-    // Nama tabel
     protected $table = 'konsultasi';
 
-    // Kolom yang boleh diisi secara massal
+    // Konstanta status
+    public const STATUS_MENUNGGU          = 'Menunggu Persetujuan';
+    public const STATUS_DISETUJUI         = 'Disetujui';
+    public const STATUS_DITOLAK           = 'Ditolak';
+    public const STATUS_DIJADWALKAN_ULANG = 'Dijadwalkan Ulang';
+    public const STATUS_SELESAI           = 'Selesai';
+
     protected $fillable = [
         'siswa_id',
         'guru_id',
@@ -24,42 +30,38 @@ class Konsultasi extends Model
         'hasil_konseling',
     ];
 
-    // Casting tanggal ke instance Carbon
     protected $casts = [
-        'jadwal_diminta'   => 'datetime',
-        'jadwal_disetujui' => 'datetime',
+        'jadwal_diminta'    => 'datetime',
+        'jadwal_disetujui'  => 'datetime',
+        'created_at'        => 'datetime',
+        'updated_at'        => 'datetime',
     ];
 
-    // Konstanta status untuk konsistensi
-    public const STATUS_MENUNGGU           = 'Menunggu Persetujuan';
-    public const STATUS_DISETUJUI          = 'Disetujui';
-    public const STATUS_DITOLAK            = 'Ditolak';
-    public const STATUS_DIJADWALKAN_ULANG  = 'Dijadwalkan Ulang';
-    public const STATUS_SELESAI            = 'Selesai';
-
-    /**
-     * Relasi ke model User (sebagai Siswa)
-     */
     public function siswa()
     {
         return $this->belongsTo(User::class, 'siswa_id');
     }
 
-    /**
-     * Relasi ke model User (sebagai Guru)
-     */
     public function guru()
     {
         return $this->belongsTo(User::class, 'guru_id');
     }
 
-    /**
-     * Jadwal aktif yang dipakai untuk tampilan:
-     * - Jika ada jadwal_disetujui → pakai itu
-     * - Kalau tidak → pakai jadwal_diminta
-     */
-    public function getJadwalAktifAttribute()
+    // Jadwal aktif (yang dipakai di tabel admin)
+    public function getJadwalAktifAttribute(): ?Carbon
     {
-        return $this->jadwal_disetujui ?: $this->jadwal_diminta;
+        if ($this->jadwal_disetujui) {
+            return $this->jadwal_disetujui instanceof Carbon
+                ? $this->jadwal_disetujui
+                : Carbon::parse($this->jadwal_disetujui);
+        }
+
+        if ($this->jadwal_diminta) {
+            return $this->jadwal_diminta instanceof Carbon
+                ? $this->jadwal_diminta
+                : Carbon::parse($this->jadwal_diminta);
+        }
+
+        return null;
     }
 }

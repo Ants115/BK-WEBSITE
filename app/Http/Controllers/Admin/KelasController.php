@@ -3,131 +3,159 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Kelas;
-use App\Models\Tingkatan; 
-use Illuminate\Validation\Rule;
+use App\Models\Tingkatan;
 use App\Models\Jurusan;
-
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class KelasController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Daftar kelas.
+     * Menampilkan nama kelas, tingkatan, jurusan, wali kelas, dan jumlah siswa.
      */
-    public function index()
-{
-    // Gunakan 'with' untuk mengambil data relasi secara efisien (Eager Loading)
-    $kelasList = Kelas::with(['tingkatan', 'jurusan'])->get();
-    return view('admin.kelas.index', ['kelasList' => $kelasList]);
-}
-
-    /**
-     * Show the form for creating a new resource.
-     */
-
-     public function create()
-     {
-         $tingkatanList = Tingkatan::all(); // <-- BARIS INI PENTING
-         $jurusanList = Jurusan::all();
-         return view('admin.kelas.create', [
-             'tingkatanList' => $tingkatanList, // <-- KIRIM DATA TINGKATAN
-             'jurusanList' => $jurusanList,
-         ]);
-     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function index(Request $request)
     {
-        $validated = $request->validate([
-            'tingkatan_id' => 'required|exists:tingkatan,id', // <-- PASTIKAN INI ADA
-            'jurusan_id' => 'required|exists:jurusan,id',
-            'nama_unik' => [
-                'required',
-                'string',
-                'max:10',
-                // Memastikan kombinasi tingkatan, jurusan, dan nama_unik adalah unik
-                Rule::unique('kelas')->where(function ($query) use ($request) { return $query->where('tingkatan_id', $request->tingkatan_id)
-                                 ->where('jurusan_id', $request->jurusan_id); }),
-            ],
-            'tahun_ajaran' => 'required|string|max:10',
+        // Ambil keyword pencarian dari query string
+        $search = $request->query('search');
+
+        // Query dasar: load relasi yang dipakai di view
+        $query = Kelas::with([
+            'tingkatan',
+            'jurusan',
+            'waliKelas',      // aman walaupun null
         ]);
 
-        // Ambil data relasi untuk membuat nama kelas yang deskriptif
-        $tingkatan = Tingkatan::find($validated['tingkatan_id']);
-        $jurusan = Jurusan::find($validated['jurusan_id']);
+        // Kalau ada keyword, filter berdasarkan nama_kelas
+        if (!empty($search)) {
+            $query->where('nama_kelas', 'like', "%{$search}%");
+        }
 
-        // Buat nama kelas lengkap menggunakan singkatan, contoh: "X RPL 1"
-        $validated['nama_kelas'] = sprintf( 
-            '%s %s %s',
-            $tingkatan->nama_tingkatan,
-            $jurusan->singkatan ?? $jurusan->nama_jurusan, // Prioritaskan singkatan
-            $validated['nama_unik']
-        );
+        // Paginate + keep query string (supaya ?search= tetap ada saat pindah halaman)
+        $kelasList = $query
+            ->orderBy('nama_kelas', 'asc')
+            ->paginate(15)
+            ->withQueryString();
 
-        Kelas::create($validated);
-
-        return redirect()->route('admin.kelas.index')->with('success', 'Kelas baru berhasil ditambahkan.');
-    }
-    /**
-     * Show the form for editing the specified resource.
-     */
-    
-public function edit(Kelas $kela)
-{
-    $tingkatanList = Tingkatan::all(); // <-- BARIS INI PENTING
-    $jurusanList = Jurusan::all();
-
-    return view('admin.kelas.edit', [
-        'kelas' => $kela,
-        'tingkatanList' => $tingkatanList, // <-- KIRIM DATA TINGKATAN
-        'jurusanList' => $jurusanList,
-    ]);
-}
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Kelas $kelas)
-    {
-        $validated = $request->validate([
-            'tingkatan_id' => 'required|exists:tingkatan,id',
-            'jurusan_id' => 'required|exists:jurusan,id',
-            'nama_unik' => [
-                'required',
-                'string',
-                'max:10',
-                Rule::unique('kelas')->where(function ($query) use ($request) {
-                    return $query->where('tingkatan_id', $request->tingkatan_id)
-                                 ->where('jurusan_id', $request->jurusan_id);
-                })->ignore($kelas->id), // Abaikan data saat ini saat validasi unik
-            ],
-            'tahun_ajaran' => 'required|string|max:10',
+        // Kirim ke view dengan nama variabel yang DIPAKAI di Blade
+        return view('admin.kelas.index', [
+            'kelasList' => $kelasList,
+            'search'    => $search,
         ]);
-
-        $tingkatan = Tingkatan::find($validated['tingkatan_id']);
-        $jurusan = Jurusan::find($validated['jurusan_id']);
-
-        // Buat nama kelas lengkap menggunakan singkatan, contoh: "X RPL 1"
-        $validated['nama_kelas'] = sprintf( 
-            '%s %s %s',
-            $tingkatan->nama_tingkatan,
-            $jurusan->singkatan ?? $jurusan->nama_jurusan, // Prioritaskan singkatan
-            $validated['nama_unik']
-        );
-
-        $kelas->update($validated);
-
-        return redirect()->route('admin.kelas.index')->with('success', 'Data kelas berhasil diperbarui.');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Form tambah kelas.
+     * Admin bisa langsung memilih wali kelas (opsional).
      */
-    public function destroy(Kelas $kelas)
-{
-    $kelas->delete();
-    return redirect()->route('admin.kelas.index')->with('success', 'Data kelas berhasil dihapus.');
-}
+    public function create(): View
+    {
+        $tingkatans = Tingkatan::orderBy('id')->get();
+        $jurusans   = Jurusan::orderBy('id')->get();
+
+        // Kandidat wali kelas: user dengan role guru_bk atau wali_kelas
+        $waliOptions = User::whereIn('role', ['guru_bk', 'wali_kelas'])
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.kelas.create', compact('tingkatans', 'jurusans', 'waliOptions'));
+    }
+
+    /**
+     * Simpan data kelas baru.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'nama_kelas'    => ['required', 'string', 'max:100'],
+            'tingkatan_id'  => ['required', 'integer'],
+            'jurusan_id'    => ['required', 'integer'],
+            'wali_kelas_id' => ['nullable', 'integer', 'exists:users,id'],
+        ]);
+
+        Kelas::create($data);
+
+        return redirect()
+            ->route('admin.kelas.index')
+            ->with('success', 'Data kelas berhasil ditambahkan.');
+    }
+
+    /**
+     * Redirect show -> edit agar tidak perlu view terpisah.
+     */
+    public function show($id): RedirectResponse
+    {
+        return redirect()->route('admin.kelas.edit', $id);
+    }
+
+    /**
+     * Form edit kelas (termasuk ganti wali kelas).
+     */
+    public function edit(Kelas $kela)
+    {
+        // Laravel kasih param {kela}, jadi kita normalkan jadi $kelas
+        $kelas = $kela;
+
+        // Ambil semua tingkatan & jurusan untuk dropdown
+        $tingkatans = Tingkatan::orderBy('id')->get();
+        $jurusans   = Jurusan::orderBy('id')->get();
+
+        // Kandidat wali kelas: guru BK + wali_kelas
+        $waliCandidates = User::whereIn('role', ['guru_bk', 'wali_kelas'])
+            ->orderBy('name')
+            ->get();
+
+        // Kirim ke view dengan nama variabel yang DIPAKAI di Blade
+        return view('admin.kelas.edit', [
+            'kelas'          => $kelas,
+            'tingkatans'     => $tingkatans,
+            'jurusans'       => $jurusans,
+            'waliCandidates' => $waliCandidates,
+        ]);
+    }
+
+
+    /**
+     * Update data kelas.
+     */
+    public function update(Request $request, $id): RedirectResponse
+    {
+        $kelas = Kelas::findOrFail($id);
+
+        $data = $request->validate([
+            'nama_kelas'    => ['required', 'string', 'max:100'],
+            'tingkatan_id'  => ['required', 'integer'],
+            'jurusan_id'    => ['required', 'integer'],
+            'wali_kelas_id' => ['nullable', 'integer', 'exists:users,id'],
+        ]);
+
+        $kelas->update($data);
+
+        return redirect()
+            ->route('admin.kelas.index')
+            ->with('success', 'Data kelas berhasil diperbarui.');
+    }
+
+    /**
+     * Hapus kelas (opsional: dicek dulu apakah masih punya siswa).
+     */
+    public function destroy($id): RedirectResponse
+    {
+        $kelas = Kelas::withCount('biodataSiswas')->findOrFail($id);
+
+        if ($kelas->biodata_siswas_count > 0) {
+            return redirect()
+                ->route('admin.kelas.index')
+                ->with('error', 'Tidak dapat menghapus kelas yang masih memiliki siswa.');
+        }
+
+        $kelas->delete();
+
+        return redirect()
+            ->route('admin.kelas.index')
+            ->with('success', 'Data kelas berhasil dihapus.');
+    }
 }
