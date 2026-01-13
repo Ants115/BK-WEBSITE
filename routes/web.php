@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\GuruBkController;
 use App\Http\Controllers\Admin\StafGuruController;
 use App\Http\Controllers\Admin\JadwalKonselingController;
 use App\Http\Controllers\Admin\PrestasiController;
+use App\Http\Controllers\Admin\LaporanKonsultasiController;
 
 // Konsultasi BK (dipakai siswa & admin)
 use App\Http\Controllers\KonsultasiController;
@@ -41,20 +42,30 @@ Route::get('/', function () {
 
 /*
 |--------------------------------------------------------------------------
-| RUTE UNTUK USER LOGIN (UMUM: SISWA)
+| ROUTE GLOBAL: semua user login (semua role)
 |--------------------------------------------------------------------------
-|
-| Semua user login lewat sini, tapi kontennya memang utama untuk siswa.
-| Role lain (guru_bk, wali_kelas, admin) tetap bisa login, hanya saja
-| dashboard utama mereka dialihkan di tempat lain.
-|
 */
 
 Route::middleware(['auth', 'verified'])->group(function () {
-
-    // Dashboard siswa
+    // /dashboard = router umum (nanti cek role di controller)
     Route::get('/dashboard', [SiswaDashboardController::class, 'index'])
         ->name('dashboard');
+
+    // Notifikasi umum
+    Route::patch('/notifikasi/{notifikasi}/tandai-dibaca', [NotifikasiController::class, 'tandaiDibaca'])
+        ->name('notifikasi.tandaiDibaca');
+});
+
+/*
+|--------------------------------------------------------------------------
+| RUTE KHUSUS SISWA (role: siswa)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'verified', 'role:siswa'])->group(function () {
+
+    // Rute khusus untuk memproses Mutasi / Pindah Kelas
+    Route::post('/siswa/update-kelas', [App\Http\Controllers\Admin\SiswaController::class, 'updateKelas'])->name('admin.siswa.updateKelas');
 
     // Prestasi siswa (versi siswa)
     Route::get('/prestasi-saya', [SiswaPrestasiController::class, 'index'])
@@ -78,23 +89,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::delete('/konsultasi/{konsultasi}', [KonsultasiController::class, 'destroy'])
         ->name('konsultasi.destroy');
-
-    // Notifikasi umum (dipakai semua user login)
-    Route::patch('/notifikasi/{notifikasi}/tandai-dibaca', [NotifikasiController::class, 'tandaiDibaca'])
-        ->name('notifikasi.tandaiDibaca');
 });
 
 /*
 |--------------------------------------------------------------------------
 | RUTE BACKOFFICE BK – ADMIN & GURU BK
 |--------------------------------------------------------------------------
-|
-| Di sini kita batasi dengan middleware role.
-| Misal:
-|   - admin  = super admin BK
-|   - guru_bk = guru BK biasa
-|
-| Silakan sesuaikan: kalau mau hanya admin saja, pakai 'role:admin'.
 */
 
 Route::middleware(['auth', 'verified', 'role:admin,guru_bk'])
@@ -106,14 +106,15 @@ Route::middleware(['auth', 'verified', 'role:admin,guru_bk'])
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])
             ->name('dashboard');
 
-        /*
-         * Konsultasi – sisi admin/guru BK
-         */
+        // Konsultasi – sisi admin/guru BK
         Route::get('/konsultasi', [KonsultasiController::class, 'index'])
             ->name('konsultasi.index');
 
         Route::get('/konsultasi/laporan', [KonsultasiController::class, 'laporan'])
             ->name('konsultasi.laporan');
+
+        Route::get('/laporan-konsultasi', [LaporanKonsultasiController::class, 'index'])
+            ->name('laporan-konsultasi.index');
 
         Route::patch('/konsultasi/{konsultasi}/selesaikan', [KonsultasiController::class, 'selesaikan'])
             ->name('konsultasi.selesaikan');
@@ -127,9 +128,7 @@ Route::middleware(['auth', 'verified', 'role:admin,guru_bk'])
         Route::patch('/konsultasi/{konsultasi}/jadwalkan-ulang', [KonsultasiController::class, 'jadwalkanUlang'])
             ->name('konsultasi.jadwalkanUlang');
 
-        /*
-         * Siswa & Kelas
-         */
+        // Siswa & Kelas
         Route::get('siswa/penyesuaian', [SiswaController::class, 'showPenyesuaianForm'])
             ->name('siswa.penyesuaian');
 
@@ -142,62 +141,48 @@ Route::middleware(['auth', 'verified', 'role:admin,guru_bk'])
         Route::resource('jurusan', JurusanController::class);
         Route::resource('tingkatan', TingkatanController::class);
 
-        /*
-         * Guru BK – role guru_bk
-         */
+        // Guru BK
         Route::resource('guru-bk', GuruBkController::class)
             ->parameters(['guru-bk' => 'guruBk']);
 
-        /*
-         * STAF GURU – role staf_guru
-         */
+        // Staf Guru
         Route::resource('staf-guru', StafGuruController::class)
             ->parameters(['staf-guru' => 'stafGuru']);
 
-        /*
-         * Jadwal Konseling
-         */
+            Route::post('/siswa/update-kelas', [SiswaController::class, 'updateKelas'])->name('admin.siswa.updateKelas');
+
+        // Jadwal Konseling
         Route::resource('jadwal-konseling', JadwalKonselingController::class)
             ->except(['show']);
 
-        /*
-         * Prestasi – sisi admin
-         */
+        // Prestasi – admin
         Route::get('/prestasi/rekap', [PrestasiController::class, 'rekap'])
             ->name('prestasi.rekap');
 
         Route::resource('prestasi', PrestasiController::class)->except(['show']);
 
-        /*
-         * Kenaikan Kelas
-         */
+        // Kenaikan Kelas
         Route::get('/kenaikan-kelas', [KenaikanKelasController::class, 'index'])
             ->name('kenaikan-kelas.index');
 
         Route::post('/kenaikan-kelas', [KenaikanKelasController::class, 'proses'])
             ->name('kenaikan-kelas.proses');
 
-        /*
-         * Arsip Alumni
-         */
+        // Arsip Alumni
         Route::get('/arsip-alumni', [ArsipAlumniController::class, 'index'])
             ->name('arsip.index');
 
         Route::get('/arsip-alumni/{tahun_lulus}', [ArsipAlumniController::class, 'show'])
             ->name('arsip.show');
 
-        /*
-         * Pelanggaran siswa (detail per siswa)
-         */
+        // Pelanggaran siswa (detail per siswa)
         Route::post('pelanggaran-siswa', [PelanggaranController::class, 'storeSiswaPelanggaran'])
             ->name('pelanggaran-siswa.store');
 
         Route::delete('pelanggaran-siswa/{pelanggaranSiswa}', [PelanggaranController::class, 'destroySiswaPelanggaran'])
             ->name('pelanggaran-siswa.destroy');
 
-        /*
-         * Surat peringatan & panggilan
-         */
+        // Surat
         Route::get('siswa/{siswa}/cetak-surat-peringatan', [SiswaController::class, 'cetakSuratPeringatan'])
             ->name('siswa.cetakSuratPeringatan');
 
@@ -207,9 +192,7 @@ Route::middleware(['auth', 'verified', 'role:admin,guru_bk'])
         Route::post('siswa/{siswa}/surat-panggilan', [SiswaController::class, 'cetakSuratPanggilan'])
             ->name('siswa.cetakSuratPanggilan');
 
-        /*
-         * Profil Admin
-         */
+        // Profil Admin
         Route::get('/profile', [ProfileController::class, 'edit'])
             ->name('profile.edit');
 
@@ -224,9 +207,6 @@ Route::middleware(['auth', 'verified', 'role:admin,guru_bk'])
 |--------------------------------------------------------------------------
 | RUTE KHUSUS WALI KELAS
 |--------------------------------------------------------------------------
-|
-| Hanya role wali_kelas yang boleh masuk ke prefix /wali-kelas.
-| Tidak ada link ke sini di menu admin, supaya benar-benar terpisah.
 */
 
 Route::middleware(['auth', 'verified', 'role:wali_kelas'])
@@ -236,7 +216,7 @@ Route::middleware(['auth', 'verified', 'role:wali_kelas'])
         Route::get('/dashboard', [WaliDashboardController::class, 'index'])
             ->name('dashboard');
 
-        // nanti kalau ada modul tambahan untuk wali kelas, letakkan di sini
+        // route wali kelas lain taruh di sini
     });
 
 require __DIR__.'/auth.php';

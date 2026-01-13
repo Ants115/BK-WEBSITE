@@ -81,9 +81,9 @@
                                             Daftar Siswa
                                         </a>
 
-                                        <a href="{{ route('admin.siswa.penyesuaian') }}"
-                                           class="block px-4 py-2 rounded-md {{ request()->routeIs('admin.siswa.penyesuaian') ? 'bg-gray-100 text-gray-900 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
-                                            Penyesuaian Kelas
+                                        <a href="{{ route('admin.kelas.index') }}"
+                                        class="block px-4 py-2 rounded-md {{ request()->routeIs('admin.kelas.*') ? 'bg-gray-100 text-gray-900 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
+                                            Manajemen Kelas & Wali Kelas
                                         </a>
 
                                         <a href="{{ route('admin.kenaikan-kelas.index') }}"

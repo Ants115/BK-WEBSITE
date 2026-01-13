@@ -17,8 +17,8 @@
 </head>
 <body>
     <div class="kop-surat">
-        <h1>SEKOLAH MENENGAH ATAS HARAPAN BANGSA</h1>
-        <p>Jalan Pendidikan No. 123, Kota Malang, Jawa Timur</p>
+        <h1>SMK ANTARTIKA 1 SDA</h1>
+        <p>Jalan Siwalanpanji No. 123, Kota Sidoarjo, Jawa Timur</p>
         <p>Telepon: (0341) 123456 - Email: info@smaharapan.sch.id</p>
     </div>
 

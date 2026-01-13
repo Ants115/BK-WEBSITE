@@ -10,37 +10,28 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Str; // Tambahkan ini untuk Slug
 
 class KelasController extends Controller
 {
     /**
      * Daftar kelas.
-     * Menampilkan nama kelas, tingkatan, jurusan, wali kelas, dan jumlah siswa.
      */
     public function index(Request $request)
     {
-        // Ambil keyword pencarian dari query string
         $search = $request->query('search');
 
-        // Query dasar: load relasi yang dipakai di view
-        $query = Kelas::with([
-            'tingkatan',
-            'jurusan',
-            'waliKelas',      // aman walaupun null
-        ]);
+        $query = Kelas::with(['tingkatan', 'jurusan', 'waliKelas']);
 
-        // Kalau ada keyword, filter berdasarkan nama_kelas
         if (!empty($search)) {
             $query->where('nama_kelas', 'like', "%{$search}%");
         }
 
-        // Paginate + keep query string (supaya ?search= tetap ada saat pindah halaman)
         $kelasList = $query
             ->orderBy('nama_kelas', 'asc')
-            ->paginate(15)
+            ->paginate(12) // Saya ubah jadi 12 biar pas grid 3x4 atau 4x3
             ->withQueryString();
 
-        // Kirim ke view dengan nama variabel yang DIPAKAI di Blade
         return view('admin.kelas.index', [
             'kelasList' => $kelasList,
             'search'    => $search,
@@ -49,19 +40,18 @@ class KelasController extends Controller
 
     /**
      * Form tambah kelas.
-     * Admin bisa langsung memilih wali kelas (opsional).
      */
     public function create(): View
     {
         $tingkatans = Tingkatan::orderBy('id')->get();
         $jurusans   = Jurusan::orderBy('id')->get();
 
-        // Kandidat wali kelas: user dengan role guru_bk atau wali_kelas
-        $waliOptions = User::whereIn('role', ['guru_bk', 'wali_kelas'])
+        // Konsisten pakai nama $waliCandidates
+        $waliCandidates = User::whereIn('role', ['guru_bk', 'wali_kelas'])
             ->orderBy('name')
             ->get();
 
-        return view('admin.kelas.create', compact('tingkatans', 'jurusans', 'waliOptions'));
+        return view('admin.kelas.create', compact('tingkatans', 'jurusans', 'waliCandidates'));
     }
 
     /**
@@ -76,6 +66,11 @@ class KelasController extends Controller
             'wali_kelas_id' => ['nullable', 'integer', 'exists:users,id'],
         ]);
 
+        // Otomatis buat slug (nama_unik)
+        $data['nama_unik'] = Str::slug($data['nama_kelas']);
+        // Default tahun ajaran (bisa diubah nanti jika mau input manual)
+        $data['tahun_ajaran'] = '2025/2026';
+
         Kelas::create($data);
 
         return redirect()
@@ -84,7 +79,7 @@ class KelasController extends Controller
     }
 
     /**
-     * Redirect show -> edit agar tidak perlu view terpisah.
+     * Redirect show -> edit.
      */
     public function show($id): RedirectResponse
     {
@@ -92,29 +87,21 @@ class KelasController extends Controller
     }
 
     /**
-     * Form edit kelas (termasuk ganti wali kelas).
+     * Form edit kelas.
      */
-    public function edit(Kelas $kela)
+    public function edit(Kelas $kela) // Laravel binding (param harus sama dengan route list)
     {
-        // Laravel kasih param {kela}, jadi kita normalkan jadi $kelas
+        // Fix param binding (kadang laravel baca {kela} bukan {kelas})
         $kelas = $kela;
 
-        // Ambil semua tingkatan & jurusan untuk dropdown
         $tingkatans = Tingkatan::orderBy('id')->get();
         $jurusans   = Jurusan::orderBy('id')->get();
 
-        // Kandidat wali kelas: guru BK + wali_kelas
         $waliCandidates = User::whereIn('role', ['guru_bk', 'wali_kelas'])
             ->orderBy('name')
             ->get();
 
-        // Kirim ke view dengan nama variabel yang DIPAKAI di Blade
-        return view('admin.kelas.edit', [
-            'kelas'          => $kelas,
-            'tingkatans'     => $tingkatans,
-            'jurusans'       => $jurusans,
-            'waliCandidates' => $waliCandidates,
-        ]);
+        return view('admin.kelas.edit', compact('kelas', 'tingkatans', 'jurusans', 'waliCandidates'));
     }
 
 
@@ -132,6 +119,9 @@ class KelasController extends Controller
             'wali_kelas_id' => ['nullable', 'integer', 'exists:users,id'],
         ]);
 
+        // Update slug jika nama berubah
+        $data['nama_unik'] = Str::slug($data['nama_kelas']);
+
         $kelas->update($data);
 
         return redirect()
@@ -140,16 +130,18 @@ class KelasController extends Controller
     }
 
     /**
-     * Hapus kelas (opsional: dicek dulu apakah masih punya siswa).
+     * Hapus kelas.
      */
     public function destroy($id): RedirectResponse
     {
-        $kelas = Kelas::withCount('biodataSiswas')->findOrFail($id);
+        // Cek relasi ke siswa (biodataSiswa atau biodataSiswas sesuai model kamu)
+        // Pastikan nama relasi di Model Kelas.php adalah 'biodataSiswa'
+        $kelas = Kelas::withCount('biodataSiswa')->findOrFail($id);
 
-        if ($kelas->biodata_siswas_count > 0) {
+        if ($kelas->biodata_siswa_count > 0) {
             return redirect()
                 ->route('admin.kelas.index')
-                ->with('error', 'Tidak dapat menghapus kelas yang masih memiliki siswa.');
+                ->with('error', 'Gagal hapus! Kelas ini masih memiliki siswa.');
         }
 
         $kelas->delete();

@@ -14,7 +14,9 @@ class Kelas extends Model
     protected $table = 'kelas';
 
     protected $fillable = [
-        'nama_kelas',
+       'nama_kelas',
+        'nama_unik',     // Tambahkan ini
+        'tahun_ajaran',  // Tambahkan ini (opsional jika mau dipakai)
         'tingkatan_id',
         'jurusan_id',
         'wali_kelas_id',

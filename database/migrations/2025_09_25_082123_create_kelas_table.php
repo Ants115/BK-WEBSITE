@@ -12,13 +12,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tingkatan_id')->constrained('tingkatans');
             $table->foreignId('jurusan_id')->constrained('jurusans');
-            $table->string('nama_unik');
+            $table->string('nama_unik')->nullable(); // Jadikan nullable jaga-jaga
             $table->string('nama_kelas');
-            $table->string('tahun_ajaran');
-            $table->foreignId('wali_kelas_user_id')->nullable()->constrained('users');
+            $table->string('tahun_ajaran')->default(date('Y')); // Kasih default tahun sekarang
+            $table->foreignId('wali_kelas_id')->nullable()->constrained('users'); // PERBAIKAN DISINI
             $table->timestamps();
         });
     }
+    
 
     public function down(): void
     {
