@@ -1,210 +1,320 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Detail Siswa: {{ $siswa->name }}
-        </h2>
+        <div class="flex flex-col md:flex-row justify-between items-center">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                Detail Siswa
+            </h2>
+            <a href="{{ route('admin.siswa.index', ['kelas_id' => $siswa->biodataSiswa->kelas_id]) }}" class="text-sm text-gray-500 hover:text-indigo-600 mt-2 md:mt-0">
+                &larr; Kembali ke Daftar Kelas
+            </a>
+        </div>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            
+            {{-- Alert Sukses --}}
+            @if (session('success'))
+                <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+                    {{ session('success') }}
+                </div>
+            @endif
 
-            <!-- Kolom Kiri: Form Tambah Pelanggaran -->
-            <div class="md:col-span-1">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">
-                        <h3 class="text-lg font-medium mb-4">Tambah Catatan Pelanggaran</h3>
-                        
-                        @if (session('success'))
-                            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4" role="alert">
-                                <p>{{ session('success') }}</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {{-- KOLOM KIRI: PROFIL SISWA --}}
+                <div class="md:col-span-1">
+                    <div class="bg-white shadow-sm sm:rounded-lg p-6 border-t-4 border-indigo-500">
+                        <div class="flex flex-col items-center">
+                            <div class="h-24 w-24 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-3xl font-bold mb-4">
+                                {{ substr($siswa->name, 0, 1) }}
                             </div>
-                        @endif
-                        
-                        <form action="{{ route('admin.pelanggaran-siswa.store') }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="siswa_user_id" value="{{ $siswa->id }}">
+                            <h3 class="text-xl font-bold text-gray-900 text-center">{{ $siswa->name }}</h3>
+                            <p class="text-sm text-gray-500 text-center mb-4">{{ $siswa->biodataSiswa->nis ?? 'NIS Belum Ada' }}</p>
                             
-                            <div class="space-y-4">
-                                <div>
-                                    <label for="pelanggaran_id" class="block text-sm font-medium text-gray-700">Jenis Pelanggaran</label>
-                                    <select name="pelanggaran_id" id="pelanggaran_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm @error('pelanggaran_id') border-red-500 @enderror" required>
-                                        <option value="" disabled selected>-- Pilih Pelanggaran --</option>
-                                        @foreach ($masterPelanggaran as $pelanggaran)
-                                            <option value="{{ $pelanggaran->id }}" @selected(old('pelanggaran_id') == $pelanggaran->id)>
-                                                {{ $pelanggaran->nama_pelanggaran }} ({{ $pelanggaran->poin }} poin)
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <x-input-error :messages="$errors->get('pelanggaran_id')" class="mt-2" />
+                            <div class="w-full border-t border-gray-100 py-4">
+                                <div class="flex justify-between py-2">
+                                    <span class="text-sm text-gray-500">Kelas</span>
+                                    <span class="text-sm font-semibold text-gray-800">{{ $siswa->biodataSiswa->kelas->nama_kelas ?? '-' }}</span>
                                 </div>
-                        
-                                <div>
-                                    <label for="tanggal" class="block text-sm font-medium text-gray-700">Tanggal Kejadian</label>
-                                    <input type="date" name="tanggal" id="tanggal" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm @error('tanggal') border-red-500 @enderror" value="{{ old('tanggal', now()->toDateString()) }}" required>
-                                    <x-input-error :messages="$errors->get('tanggal')" class="mt-2" />
+                                <div class="flex justify-between py-2">
+                                    <span class="text-sm text-gray-500">Jurusan</span>
+                                    <span class="text-sm font-semibold text-gray-800">{{ $siswa->biodataSiswa->kelas->jurusan->singkatan ?? '-' }}</span>
                                 </div>
-                        
-                                <div>
-                                    <label for="keterangan" class="block text-sm font-medium text-gray-700">Keterangan (Opsional)</label>
-                                    <textarea name="keterangan" id="keterangan" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('keterangan') }}</textarea>
-                                    <x-input-error :messages="$errors->get('keterangan')" class="mt-2" />
+                                <div class="flex justify-between py-2">
+                                    <span class="text-sm text-gray-500">Email</span>
+                                    <span class="text-sm font-semibold text-gray-800">{{ $siswa->email }}</span>
+                                </div>
+                            </div>
+
+                            {{-- KARTU POIN PELANGGARAN --}}
+                            <div class="w-full mt-4 p-4 rounded-lg {{ $totalPoin > 0 ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200' }}">
+                                <div class="text-center">
+                                    <span class="block text-xs uppercase font-bold text-gray-500">Total Poin Pelanggaran</span>
+                                    <span class="block text-3xl font-extrabold {{ $totalPoin > 50 ? 'text-red-600' : ($totalPoin > 0 ? 'text-orange-500' : 'text-green-600') }}">
+                                        {{ $totalPoin }}
+                                    </span>
                                 </div>
                                 
-                                <div class="flex justify-end">
-                                    <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                                        Simpan Pelanggaran
-                                    </button>
+                                {{-- Status Surat Peringatan --}}
+                                @if($jenisSurat)
+                                    <div class="mt-3 text-center">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 animate-pulse">
+                                            ⚠️ {{ $jenisSurat }}
+                                        </span>
+                                        <div class="mt-2">
+                                            <a href="{{ route('admin.siswa.cetakSuratPeringatan', $siswa->id) }}" target="_blank" class="text-xs text-blue-600 hover:underline font-bold">
+                                                Cetak Surat Peringatan &rarr;
+                                            </a>
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="mt-2 text-center text-xs text-green-600 font-semibold">
+                                        Status Aman
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- TOTAL PRESTASI (Opsional, biar imbang) --}}
+                            <div class="w-full mt-4 p-4 rounded-lg bg-blue-50 border border-blue-200">
+                                <div class="text-center">
+                                    <span class="block text-xs uppercase font-bold text-blue-500">Total Prestasi</span>
+                                    <span class="block text-3xl font-extrabold text-blue-600">
+                                        {{ $totalPrestasi }}
+                                    </span>
                                 </div>
                             </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Kolom Kanan: Detail & Riwayat -->
-            <div class="md:col-span-2 space-y-6">
-
-                {{-- PROFIL SISWA + RINGKASAN --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">
-                        <h3 class="text-lg font-medium mb-4">Profil Siswa</h3>
-                        <p><strong>Nama:</strong> {{ $siswa->name }}</p>
-                        <p><strong>NIS:</strong> {{ $siswa->biodataSiswa->nis ?? 'N/A' }}</p>
-                        <p><strong>Kelas:</strong> {{ $siswa->biodataSiswa->kelas->nama_kelas ?? 'N/A' }}</p>
-
-                        <div class="mt-3 text-sm text-gray-700">
-                            <p><strong>Total Prestasi Tercatat:</strong> {{ $totalPrestasi ?? 0 }}</p>
-                        </div>
-                        
-                        @php
-                            $bgColorClass = 'bg-blue-100 border-blue-400 text-blue-700'; // Aman
-                            if ($totalPoin >= 100) $bgColorClass = 'bg-red-100 border-red-400 text-red-700';
-                            elseif ($totalPoin >= 50) $bgColorClass = 'bg-yellow-100 border-yellow-400 text-yellow-700';
-                            elseif ($totalPoin >= 25) $bgColorClass = 'bg-orange-100 border-orange-400 text-orange-700';
-                        @endphp
-
-                        <div class="mt-4 p-4 {{ $bgColorClass }} border rounded-lg">
-                            <p class="text-xl font-bold">Total Poin Pelanggaran: {{ $totalPoin }}</p>
-                        </div>
-
-                        <div class="mt-4 flex space-x-2">
-                            @if($jenisSurat)
-                                <a href="{{ route('admin.siswa.cetakSuratPeringatan', ['siswa' => $siswa->id, 'jenis' => $jenisSurat]) }}" target="_blank" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded inline-flex items-center">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-                                    </svg>
-                                    <span>Cetak {{ $jenisSurat }}</span>
-                                </a>
-                            @endif
-
-                            <a href="{{ route('admin.siswa.createSuratPanggilan', $siswa->id) }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-flex items-center">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                </svg>
-                                <span>Buat Surat Panggilan Ortu</span>
-                            </a>
                         </div>
                     </div>
                 </div>
 
-                {{-- RIWAYAT PELANGGARAN --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">
-                        <h3 class="text-lg font-medium mb-4">Riwayat Pelanggaran</h3>
+                {{-- KOLOM KANAN: RIWAYAT & AKSI --}}
+                <div class="md:col-span-2 space-y-6">
+                    
+                    {{-- TOMBOL AKSI CEPAT --}}
+                    <div class="bg-white shadow-sm sm:rounded-lg p-4 flex flex-col sm:flex-row gap-4">
+                        {{-- Tombol Pelanggaran --}}
+                        <button onclick="openModal('violationModal')" class="flex-1 bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition flex items-center justify-center font-bold shadow-sm">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            Catat Pelanggaran
+                        </button>
+                        {{-- Tombol Prestasi (SUDAH AKTIF) --}}
+                        <button onclick="openModal('achievementModal')" class="flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition flex items-center justify-center font-bold shadow-sm">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                            Catat Prestasi
+                        </button>
+                    </div>
+
+                    {{-- TABEL 1: RIWAYAT PELANGGARAN --}}
+                    <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden border border-red-100">
+                        <div class="px-6 py-4 border-b border-red-100 bg-red-50 flex justify-between items-center">
+                            <h3 class="font-bold text-red-700 flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                Riwayat Pelanggaran
+                            </h3>
+                        </div>
                         <div class="overflow-x-auto">
-                            <table class="min-w-full bg-white">
-                                <thead class="bg-gray-200">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-white">
                                     <tr>
-                                        <th class="py-2 px-4 text-left">Tanggal</th>
-                                        <th class="py-2 px-4 text-left">Pelanggaran</th>
-                                        <th class="py-2 px-4 text-center">Poin</th>
-                                        <th class="py-2 px-4 text-left">Keterangan</th>
-                                        <th class="py-2 px-4 text-left">Dicatat oleh</th>
-                                        <th class="py-2 px-4 text-left">Aksi</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pelanggaran</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Poin</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    @forelse ($siswa->pelanggaranSiswa as $item)
-                                        <tr class="border-b">
-                                            <td class="py-2 px-4">{{ \Carbon\Carbon::parse($item->tanggal)->isoFormat('D MMMM Y') }}</td>
-                                            <td class="py-2 px-4">{{ $item->pelanggaran->nama_pelanggaran ?? 'N/A' }}</td>
-                                            <td class="py-2 px-4 text-center">{{ $item->pelanggaran->poin ?? 'N/A' }}</td>
-                                            <td class="py-2 px-4">{{ $item->keterangan ?? '-' }}</td>
-                                            <td class="py-2 px-4">{{ $item->pelapor->name ?? 'N/A' }}</td>
-                                            <td class="py-2 px-4">
-                                                <form action="{{ route('admin.pelanggaran-siswa.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus catatan ini?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="text-red-600 hover:underline">Hapus</button>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @forelse ($siswa->pelanggaranSiswa as $history)
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                                {{ \Carbon\Carbon::parse($history->tanggal)->translatedFormat('d M Y') }}
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-900">
+                                                <div class="font-bold">{{ $history->pelanggaran->nama_pelanggaran ?? 'Data Dihapus' }}</div>
+                                                <div class="text-xs text-gray-500">{{ $history->keterangan ?? '-' }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-red-600">
+                                                +{{ $history->pelanggaran->poin ?? 0 }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <form action="{{ route('admin.pelanggaran.destroySiswa', $history->id) }}" method="POST" onsubmit="return confirm('Yakin hapus riwayat ini?');">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="text-gray-400 hover:text-red-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                                                 </form>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center py-4 text-gray-500">
-                                                Belum ada riwayat pelanggaran.
-                                            </td>
+                                            <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-400 italic">Belum ada pelanggaran.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                </div>
 
-                {{-- RIWAYAT PRESTASI --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">
-                        <h3 class="text-lg font-medium mb-4 flex justify-between items-center">
-                            <span>Riwayat Prestasi</span>
-                            <span class="text-sm text-gray-500">
-                                Total: <span class="font-semibold">{{ $totalPrestasi ?? 0 }}</span> prestasi
-                            </span>
-                        </h3>
-
+                    {{-- TABEL 2: RIWAYAT PRESTASI --}}
+                    <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden border border-blue-100">
+                        <div class="px-6 py-4 border-b border-blue-100 bg-blue-50 flex justify-between items-center">
+                            <h3 class="font-bold text-blue-700 flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                                Riwayat Prestasi
+                            </h3>
+                        </div>
                         <div class="overflow-x-auto">
-                            <table class="min-w-full bg-white">
-                                <thead class="bg-gray-200">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-white">
                                     <tr>
-                                        <th class="py-2 px-4 text-left">Tanggal</th>
-                                        <th class="py-2 px-4 text-left">Judul</th>
-                                        <th class="py-2 px-4 text-left">Tingkat</th>
-                                        <th class="py-2 px-4 text-left">Kategori</th>
-                                        <th class="py-2 px-4 text-left">Penyelenggara</th>
-                                        <th class="py-2 px-4 text-left">Keterangan</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Judul Prestasi</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tingkat</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    @forelse ($prestasi as $p)
-                                        <tr class="border-b">
-                                            <td class="py-2 px-4">
-                                                @if($p->tanggal)
-                                                    {{ \Carbon\Carbon::parse($p->tanggal)->isoFormat('D MMMM Y') }}
-                                                @else
-                                                    -
-                                                @endif
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @forelse ($prestasi as $pres)
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                                {{ $pres->tanggal ? $pres->tanggal->format('d M Y') : '-' }}
                                             </td>
-                                            <td class="py-2 px-4">{{ $p->judul }}</td>
-                                            <td class="py-2 px-4">{{ $p->tingkat }}</td>
-                                            <td class="py-2 px-4">{{ $p->kategori }}</td>
-                                            <td class="py-2 px-4">{{ $p->penyelenggara }}</td>
-                                            <td class="py-2 px-4">{{ $p->keterangan ?? '-' }}</td>
+                                            <td class="px-6 py-4 text-sm text-gray-900">
+                                                <div class="font-bold">{{ $pres->judul }}</div>
+                                                <div class="text-xs text-gray-500">{{ $pres->penyelenggara }} ({{ $pres->kategori }})</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                    {{ $pres->tingkat }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <form action="{{ route('admin.prestasi.destroySiswa', $pres->id) }}" method="POST" onsubmit="return confirm('Yakin hapus prestasi ini?');">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="text-gray-400 hover:text-red-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                                                </form>
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center py-4 text-gray-500">
-                                                Belum ada prestasi yang tercatat.
-                                            </td>
+                                            <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-400 italic">Belum ada data prestasi.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
                             </table>
                         </div>
                     </div>
+
                 </div>
-
             </div>
-
         </div>
     </div>
+
+    {{-- MODAL INPUT PELANGGARAN --}}
+    <div id="violationModal" class="fixed inset-0 z-50 hidden overflow-y-auto" style="display: none;">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeModal('violationModal')"></div>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-red-600 px-4 py-3 text-white"><h3 class="text-lg font-bold">Catat Pelanggaran</h3></div>
+                <form action="{{ route('admin.pelanggaran.storeSiswa') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="siswa_user_id" value="{{ $siswa->id }}">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Jenis Pelanggaran</label>
+                            <select name="pelanggaran_id" required class="block w-full mt-1 rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
+                                <option value="" disabled selected>-- Pilih --</option>
+                                @foreach($masterPelanggaran as $mp)
+                                    <option value="{{ $mp->id }}">{{ $mp->nama_pelanggaran }} ({{ $mp->poin }} Poin)</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Tanggal</label>
+                            <input type="date" name="tanggal" value="{{ date('Y-m-d') }}" required class="block w-full mt-1 rounded-md border-gray-300 shadow-sm">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Keterangan</label>
+                            <textarea name="keterangan" rows="2" class="block w-full mt-1 rounded-md border-gray-300 shadow-sm"></textarea>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 sm:ml-3 sm:w-auto sm:text-sm">Simpan</button>
+                        <button type="button" onclick="closeModal('violationModal')" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Batal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL INPUT PRESTASI (BARU) --}}
+    <div id="achievementModal" class="fixed inset-0 z-50 hidden overflow-y-auto" style="display: none;">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeModal('achievementModal')"></div>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-blue-600 px-4 py-3 text-white"><h3 class="text-lg font-bold">Catat Prestasi Siswa</h3></div>
+                
+                <form action="{{ route('admin.prestasi.storeSiswa') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="siswa_id" value="{{ $siswa->id }}">
+                    
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Judul Prestasi / Lomba</label>
+                            <input type="text" name="judul" required placeholder="Juara 1 Lomba Coding..." class="block w-full mt-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Tingkat</label>
+                                <select name="tingkat" required class="block w-full mt-1 rounded-md border-gray-300 shadow-sm">
+                                    <option value="Sekolah">Sekolah</option>
+                                    <option value="Kabupaten/Kota">Kabupaten/Kota</option>
+                                    <option value="Provinsi">Provinsi</option>
+                                    <option value="Nasional">Nasional</option>
+                                    <option value="Internasional">Internasional</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Kategori</label>
+                                <select name="kategori" required class="block w-full mt-1 rounded-md border-gray-300 shadow-sm">
+                                    <option value="Akademik">Akademik</option>
+                                    <option value="Non-akademik">Non-akademik</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Penyelenggara</label>
+                            <input type="text" name="penyelenggara" placeholder="Dinas Pendidikan..." class="block w-full mt-1 rounded-md border-gray-300 shadow-sm">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Tanggal</label>
+                            <input type="date" name="tanggal" value="{{ date('Y-m-d') }}" required class="block w-full mt-1 rounded-md border-gray-300 shadow-sm">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Keterangan (Opsional)</label>
+                            <textarea name="keterangan" rows="2" class="block w-full mt-1 rounded-md border-gray-300 shadow-sm"></textarea>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 sm:ml-3 sm:w-auto sm:text-sm">Simpan Prestasi</button>
+                        <button type="button" onclick="closeModal('achievementModal')" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Batal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id) {
+            document.getElementById(id).style.display = 'block';
+            document.getElementById(id).classList.remove('hidden');
+        }
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+            document.getElementById(id).classList.add('hidden');
+        }
+    </script>
 </x-app-layout>

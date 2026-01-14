@@ -2,15 +2,12 @@
 
     @php
         use Illuminate\Support\Facades\Auth;
-
         $user = Auth::user();
     @endphp
 
-    <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
-                <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     @if ($user && $user->role === 'guru_bk')
                         <a href="{{ route('admin.dashboard') }}">
@@ -27,7 +24,6 @@
                     @endif
                 </div>
 
-                <!-- Navigation Links -->
                 @if($user)
                     <div class="hidden sm:-my-px sm:ms-10 sm:flex items-center">
                         @if ($user->role === 'guru_bk')
@@ -40,7 +36,7 @@
                                     class="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                                 >
                                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                         viewBox="0 0 24 24" stroke="currentColor">
+                                           viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
                                               d="M4 6h16M4 12h16M4 18h16"/>
                                     </svg>
@@ -138,9 +134,12 @@
                                 {{ __('Dashboard') }}
                             </x-nav-link>
 
-                            <x-nav-link :href="route('konsultasi.create')" :active="request()->routeIs('konsultasi.create')">
-                                {{ __('Buat Janji Temu') }}
-                            </x-nav-link>
+                            {{-- HANYA TAMPIL JIKA STATUS BELUM LULUS --}}
+                            @if($user->biodataSiswa && $user->biodataSiswa->status !== 'Lulus')
+                                <x-nav-link :href="route('konsultasi.create')" :active="request()->routeIs('konsultasi.create')">
+                                    {{ __('Buat Janji Temu') }}
+                                </x-nav-link>
+                            @endif
 
                             <x-nav-link :href="route('konsultasi.riwayat')" :active="request()->routeIs('konsultasi.riwayat')">
                                 {{ __('Riwayat Konsultasi') }}
@@ -151,10 +150,8 @@
             </div>
 
             @if($user)
-                <!-- Settings Dropdown & Notifications -->
                 <div class="hidden sm:flex sm:items-center sm:ms-6">
 
-                    <!-- NOTIFICATION BELL -->
                     <div class="ms-3 relative">
                         <x-dropdown align="right" width="60">
                             <x-slot name="trigger">
@@ -203,7 +200,6 @@
                         </x-dropdown>
                     </div>
 
-                    <!-- User Profile Dropdown -->
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
                             <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -231,7 +227,6 @@
                 </div>
             @endif
 
-            <!-- Hamburger (Mobile Menu Button) -->
             @if($user)
                 <div class="-me-2 flex items-center sm:hidden">
                     <button
@@ -253,7 +248,6 @@
     </div>
 
     @if($user)
-        <!-- Responsive Navigation Menu (Mobile) -->
         <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
             <div class="pt-2 pb-3 space-y-1">
                 @if ($user->role === 'guru_bk')
@@ -275,10 +269,6 @@
 
                     <x-responsive-nav-link :href="route('admin.siswa.index')" :active="request()->routeIs('admin.siswa.*')">
                         {{ __('Daftar Siswa') }}
-                    </x-responsive-nav-link>
-
-                    <x-responsive-nav-link :href="route('admin.siswa.penyesuaian')" :active="request()->routeIs('admin.siswa.penyesuaian')">
-                        {{ __('Penyesuaian Kelas') }}
                     </x-responsive-nav-link>
 
                     <x-responsive-nav-link :href="route('admin.kenaikan-kelas.index')" :active="request()->routeIs('admin.kenaikan-kelas.index')">
@@ -309,9 +299,12 @@
                         {{ __('Dashboard') }}
                     </x-responsive-nav-link>
 
-                    <x-responsive-nav-link :href="route('konsultasi.create')" :active="request()->routeIs('konsultasi.create')">
-                        {{ __('Buat Janji Temu') }}
-                    </x-responsive-nav-link>
+                    {{-- MOBILE MENU: HANYA TAMPIL JIKA STATUS BELUM LULUS --}}
+                    @if($user->biodataSiswa && $user->biodataSiswa->status !== 'Lulus')
+                        <x-responsive-nav-link :href="route('konsultasi.create')" :active="request()->routeIs('konsultasi.create')">
+                            {{ __('Buat Janji Temu') }}
+                        </x-responsive-nav-link>
+                    @endif
 
                     <x-responsive-nav-link :href="route('konsultasi.riwayat')" :active="request()->routeIs('konsultasi.riwayat')">
                         {{ __('Riwayat Konsultasi') }}

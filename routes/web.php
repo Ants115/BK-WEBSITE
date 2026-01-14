@@ -102,87 +102,43 @@ Route::middleware(['auth', 'verified', 'role:admin,guru_bk'])
     ->name('admin.')
     ->group(function () {
 
-        // Dashboard Admin BK
-        Route::get('/dashboard', [AdminDashboardController::class, 'index'])
-            ->name('dashboard');
+        // ==========================================
+        // 1. DASHBOARD & PROFIL
+        // ==========================================
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-        // Konsultasi – sisi admin/guru BK
-        Route::get('/konsultasi', [KonsultasiController::class, 'index'])
-            ->name('konsultasi.index');
-
-        Route::get('/konsultasi/laporan', [KonsultasiController::class, 'laporan'])
-            ->name('konsultasi.laporan');
-
-        Route::get('/laporan-konsultasi', [LaporanKonsultasiController::class, 'index'])
-            ->name('laporan-konsultasi.index');
-
-        Route::patch('/konsultasi/{konsultasi}/selesaikan', [KonsultasiController::class, 'selesaikan'])
-            ->name('konsultasi.selesaikan');
-
-        Route::patch('/konsultasi/{konsultasi}/setujui', [KonsultasiController::class, 'setujui'])
-            ->name('konsultasi.setujui');
-
-        Route::patch('/konsultasi/{konsultasi}/tolak', [KonsultasiController::class, 'tolak'])
-            ->name('konsultasi.tolak');
-
-        Route::patch('/konsultasi/{konsultasi}/jadwalkan-ulang', [KonsultasiController::class, 'jadwalkanUlang'])
-            ->name('konsultasi.jadwalkanUlang');
-
-        // Siswa & Kelas
-        Route::get('siswa/penyesuaian', [SiswaController::class, 'showPenyesuaianForm'])
-            ->name('siswa.penyesuaian');
-
-        Route::post('siswa/update-kelas', [SiswaController::class, 'updateKelas'])
-            ->name('siswa.update-kelas');
-
-        Route::resource('siswa', SiswaController::class);
-        Route::resource('pelanggaran', PelanggaranController::class);
+        // ==========================================
+        // 2. MANAJEMEN MASTER DATA (CRUD)
+        // ==========================================
+        
+        // --- PERBAIKAN URUTAN KELAS (PENTING) ---
+        // Route Bulk Delete WAJIB DI ATAS Resource Kelas agar tidak kena 404
+        Route::delete('/kelas/bulk-delete', [\App\Http\Controllers\Admin\KelasController::class, 'destroyMultiple'])
+            ->name('kelas.destroyMultiple');
+            
         Route::resource('kelas', KelasController::class);
+        // ----------------------------------------
+
         Route::resource('jurusan', JurusanController::class);
         Route::resource('tingkatan', TingkatanController::class);
+        Route::resource('guru-bk', GuruBkController::class)->parameters(['guru-bk' => 'guruBk']);
+        Route::resource('staf-guru', StafGuruController::class)->parameters(['staf-guru' => 'stafGuru']);
 
-        // Guru BK
-        Route::resource('guru-bk', GuruBkController::class)
-            ->parameters(['guru-bk' => 'guruBk']);
 
-        // Staf Guru
-        Route::resource('staf-guru', StafGuruController::class)
-            ->parameters(['staf-guru' => 'stafGuru']);
+        // ==========================================
+        // 3. MANAJEMEN SISWA & MUTASI
+        // ==========================================
+        Route::resource('siswa', SiswaController::class);
 
-            Route::post('/siswa/update-kelas', [SiswaController::class, 'updateKelas'])->name('admin.siswa.updateKelas');
+        // Mutasi / Pindah Kelas
+        Route::post('/siswa/update-kelas', [SiswaController::class, 'updateKelas'])
+            ->name('siswa.updateKelas');
 
-        // Jadwal Konseling
-        Route::resource('jadwal-konseling', JadwalKonselingController::class)
-            ->except(['show']);
-
-        // Prestasi – admin
-        Route::get('/prestasi/rekap', [PrestasiController::class, 'rekap'])
-            ->name('prestasi.rekap');
-
-        Route::resource('prestasi', PrestasiController::class)->except(['show']);
-
-        // Kenaikan Kelas
-        Route::get('/kenaikan-kelas', [KenaikanKelasController::class, 'index'])
-            ->name('kenaikan-kelas.index');
-
-        Route::post('/kenaikan-kelas', [KenaikanKelasController::class, 'proses'])
-            ->name('kenaikan-kelas.proses');
-
-        // Arsip Alumni
-        Route::get('/arsip-alumni', [ArsipAlumniController::class, 'index'])
-            ->name('arsip.index');
-
-        Route::get('/arsip-alumni/{tahun_lulus}', [ArsipAlumniController::class, 'show'])
-            ->name('arsip.show');
-
-        // Pelanggaran siswa (detail per siswa)
-        Route::post('pelanggaran-siswa', [PelanggaranController::class, 'storeSiswaPelanggaran'])
-            ->name('pelanggaran-siswa.store');
-
-        Route::delete('pelanggaran-siswa/{pelanggaranSiswa}', [PelanggaranController::class, 'destroySiswaPelanggaran'])
-            ->name('pelanggaran-siswa.destroy');
-
-        // Surat
+        // Cetak Surat
         Route::get('siswa/{siswa}/cetak-surat-peringatan', [SiswaController::class, 'cetakSuratPeringatan'])
             ->name('siswa.cetakSuratPeringatan');
 
@@ -192,15 +148,69 @@ Route::middleware(['auth', 'verified', 'role:admin,guru_bk'])
         Route::post('siswa/{siswa}/surat-panggilan', [SiswaController::class, 'cetakSuratPanggilan'])
             ->name('siswa.cetakSuratPanggilan');
 
-        // Profil Admin
-        Route::get('/profile', [ProfileController::class, 'edit'])
-            ->name('profile.edit');
 
-        Route::patch('/profile', [ProfileController::class, 'update'])
-            ->name('profile.update');
+        // ==========================================
+        // 4. MANAJEMEN PELANGGARAN
+        // ==========================================
+        // Master Data Pelanggaran
+        Route::resource('pelanggaran', PelanggaranController::class);
 
-        Route::delete('/profile', [ProfileController::class, 'destroy'])
-            ->name('profile.destroy');
+        // Transaksi Catat Pelanggaran Siswa (Tombol Merah)
+        Route::post('/siswa/pelanggaran', [PelanggaranController::class, 'storeSiswaPelanggaran'])
+            ->name('pelanggaran.storeSiswa');
+
+        // Transaksi Hapus Riwayat Pelanggaran
+        Route::delete('/siswa/pelanggaran/{id}', [PelanggaranController::class, 'destroySiswaPelanggaran'])
+            ->name('pelanggaran.destroySiswa');
+
+
+        // ==========================================
+        // 5. MANAJEMEN PRESTASI
+        // ==========================================
+        // Master Data Prestasi & Rekap
+        Route::get('/prestasi/rekap', [PrestasiController::class, 'rekap'])->name('prestasi.rekap');
+        // Route untuk Menu Sidebar "Prestasi Siswa" (Daftar & Filter)
+        Route::get('/prestasi-list', [PrestasiController::class, 'index'])->name('prestasi.index');
+        // Resource standar (CRUD)
+        Route::resource('prestasi', PrestasiController::class)->except(['show', 'index']); 
+
+        // Transaksi Catat Prestasi Siswa (Tombol Biru)
+        Route::post('/siswa/prestasi', [PrestasiController::class, 'storeSiswaPrestasi'])
+            ->name('prestasi.storeSiswa');
+            
+        // Transaksi Hapus Riwayat Prestasi
+        Route::delete('/siswa/prestasi/{id}', [PrestasiController::class, 'destroy'])
+            ->name('prestasi.destroySiswa');
+
+
+        // ==========================================
+        // 6. KONSULTASI (Admin Side)
+        // ==========================================
+        Route::get('/konsultasi', [KonsultasiController::class, 'index'])->name('konsultasi.index');
+        Route::get('/konsultasi/laporan', [KonsultasiController::class, 'laporan'])->name('konsultasi.laporan');
+        
+        Route::patch('/konsultasi/{konsultasi}/selesaikan', [KonsultasiController::class, 'selesaikan'])->name('konsultasi.selesaikan');
+        Route::patch('/konsultasi/{konsultasi}/setujui', [KonsultasiController::class, 'setujui'])->name('konsultasi.setujui');
+        Route::patch('/konsultasi/{konsultasi}/tolak', [KonsultasiController::class, 'tolak'])->name('konsultasi.tolak');
+        Route::patch('/konsultasi/{konsultasi}/jadwalkan-ulang', [KonsultasiController::class, 'jadwalkanUlang'])->name('konsultasi.jadwalkanUlang');
+
+        // Laporan Konsultasi Khusus
+        Route::get('/laporan-konsultasi', [LaporanKonsultasiController::class, 'index'])->name('laporan-konsultasi.index');
+        // Jadwal Konseling Master
+        Route::resource('jadwal-konseling', JadwalKonselingController::class)->except(['show']);
+
+
+        // ==========================================
+        // 7. FITUR LAINNYA (Kenaikan & Alumni)
+        // ==========================================
+        // Kenaikan Kelas (Massal)
+        Route::get('/kenaikan-kelas', [KenaikanKelasController::class, 'index'])->name('kenaikan-kelas.index');
+        Route::post('/kenaikan-kelas', [KenaikanKelasController::class, 'proses'])->name('kenaikan-kelas.proses');
+        
+        // Arsip Alumni
+        Route::get('/arsip-alumni', [ArsipAlumniController::class, 'index'])->name('arsip.index');
+        Route::get('/arsip-alumni/{tahun_lulus}', [ArsipAlumniController::class, 'show'])->name('arsip.show');
+
     });
 
 /*

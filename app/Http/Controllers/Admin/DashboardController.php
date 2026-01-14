@@ -10,6 +10,7 @@ use Carbon\Carbon;
 
 // Import Model
 use App\Models\User;
+use App\Models\BiodataSiswa; // <--- PENTING: Untuk filter status Aktif
 use App\Models\PelanggaranSiswa;
 use App\Models\Pelanggaran;
 use App\Models\Konsultasi; 
@@ -19,15 +20,20 @@ class DashboardController extends Controller
     public function index(): View
     {
         // ==========================================
-        // BAGIAN 1: STATISTIK PELANGGARAN
+        // BAGIAN 1: STATISTIK PELANGGARAN & SISWA
         // ==========================================
 
         // 1. Data Statistik Dasar
-        // PERBAIKAN: Mengganti nama variabel agar sesuai dengan View ($totalSiswa)
-        $totalSiswaAktif = User::where('role', 'siswa')->count();
+        
+        // [PERUBAHAN UTAMA DI SINI]
+        // Dulu: Menghitung semua User role siswa.
+        // Sekarang: Menghitung BiodataSiswa yang statusnya 'Aktif' saja.
+        $totalSiswaAktif = BiodataSiswa::where('status', 'Aktif')->count();
+        
         $totalPelanggaran = PelanggaranSiswa::count();
 
         // 2. Data Siswa Poin Tertinggi (Top 5)
+        // Kita gunakan cara JOIN milikmu karena ini yang paling stabil
         $siswaPoinTertinggi = User::where('role', 'siswa')
             ->join('pelanggaran_siswas', 'users.id', '=', 'pelanggaran_siswas.siswa_user_id')
             ->join('pelanggarans', 'pelanggaran_siswas.pelanggaran_id', '=', 'pelanggarans.id')
@@ -67,8 +73,9 @@ class DashboardController extends Controller
         // BAGIAN 3: PENGIRIMAN DATA KE VIEW
         // ==========================================
         
+        // Pastikan nama variabel di sini SAMA PERSIS dengan di view blade kamu
         return view('admin.dashboard', compact(
-           'totalSiswaAktif',
+            'totalSiswaAktif',
             'totalPelanggaran',
             'siswaPoinTertinggi',
             'pelanggaranTeratas',

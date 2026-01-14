@@ -3,41 +3,60 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\BiodataSiswa;
+use App\Models\User;
+use App\Models\BiodataSiswa; // Pastikan model ini di-use
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ArsipAlumniController extends Controller
 {
     /**
-     * Menampilkan daftar tahun kelulusan (angkatan).
+     * Menampilkan daftar tahun angkatan (Index).
      */
-    public function index()
+    public function index(): View
     {
-        // Query ini sekarang akan berjalan dengan benar
-        $tahunLulusList = BiodataSiswa::where('status', 'Lulus')
-                                      ->select('tahun_lulus')
-                                      ->distinct()
-                                      ->orderBy('tahun_lulus', 'desc')
-                                      ->pluck('tahun_lulus');
+        // Ambil tahun lulus unik dari biodata siswa
+        // Asumsi: Siswa lulus ditandai dengan status 'Lulus' atau 'Alumni'
+        $angkatan = BiodataSiswa::select('tahun_lulus')
+            ->whereNotNull('tahun_lulus')
+            ->distinct()
+            ->orderBy('tahun_lulus', 'desc')
+            ->get();
 
-        return view('admin.arsip.index', compact('tahunLulusList'));
+        return view('admin.arsip.index', compact('angkatan'));
     }
 
     /**
-     * Menampilkan daftar siswa yang lulus pada tahun tertentu.
+     * Menampilkan detail alumni per tahun (Group by Kelas).
      */
-    public function show($tahun_lulus)
+    public function show($tahun_lulus): View
     {
-        $tahunAjaran = str_replace('_', '/', $tahun_lulus);
+        // KEMBALIKAN FORMAT URL: Ubah '-' kembali menjadi '/'
+        // Contoh: dari "2026-2027" menjadi "2026/2027" agar ketemu di database
+        $tahun_asli = str_replace('-', '/', $tahun_lulus);
 
-        // Query ini sekarang akan berjalan dengan benar
-        $alumniList = BiodataSiswa::where('status', 'Lulus')
-                              ->where('tahun_lulus', $tahunAjaran)
-                              ->with('user', 'kelas')
-                              ->get();
+        // Ambil siswa yang lulus pada tahun tersebut
+        $alumni = User::whereHas('biodataSiswa', function ($q) use ($tahun_asli) {
+            $q->where('tahun_lulus', $tahun_asli);
+        })
+        ->with(['biodataSiswa.kelas.jurusan']) 
+        ->get();
 
-        $alumniGroupedByKelas = $alumniList->groupBy('kelas.nama_kelas');
+        // Kelompokkan data berdasarkan Nama Kelas
+        $alumniPerKelas = $alumni->groupBy(function ($item) {
+            return $item->biodataSiswa->kelas->nama_kelas ?? 'Tanpa Kelas';
+        });
 
-        return view('admin.arsip.show', compact('alumniGroupedByKelas', 'tahunAjaran'));
+        // Hitung total statistik
+        $totalSiswa = $alumni->count();
+        $totalKelas = $alumniPerKelas->count();
+
+        // Kirim variabel $tahun_lulus (yang asli) ke View
+        return view('admin.arsip.show', [
+            'alumniPerKelas' => $alumniPerKelas,
+            'tahun_lulus'    => $tahun_asli, // Kirim tahun yang formatnya benar (pakai /)
+            'totalSiswa'     => $totalSiswa,
+            'totalKelas'     => $totalKelas
+        ]);
     }
 }

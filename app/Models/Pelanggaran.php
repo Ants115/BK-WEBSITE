@@ -13,10 +13,10 @@ class Pelanggaran extends Model
 
     // Dengan menghapus baris "protected $table", Laravel akan secara otomatis
     // mencari nama tabel plural, yaitu "pelanggarans", yang cocok dengan migrasi Anda.
-
     protected $fillable = [
         'nama_pelanggaran',
         'poin',
+        'kategori',
     ];
 
     /**

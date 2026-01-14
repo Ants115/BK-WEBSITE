@@ -21,27 +21,32 @@ class KonsultasiController extends Controller
      */
     public function create()
     {
-        // Ambil semua guru BK
-        $guruList = User::where('role', 'guru_bk')->get();
-
-        // Tambahan: ambil jadwal semua guru (kalau sudah ada model JadwalKonseling)
-        if (class_exists(\App\Models\JadwalKonseling::class)) {
-            $jadwalList = \App\Models\JadwalKonseling::with('guru')
-                ->orderBy('tanggal')
-                ->orderBy('jam_mulai')
-                ->get();
-        } else {
-            $jadwalList = collect();
+        // --- PAGAR ALUMNI MULAI ---
+        $siswa = Auth::user();
+        
+        // Cek apakah data biodata ada DAN statusnya 'Lulus' (atau tahun_lulus terisi)
+        if ($siswa->biodataSiswa && ($siswa->biodataSiswa->status === 'Lulus' || $siswa->biodataSiswa->tahun_lulus != null)) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Maaf, Alumni tidak dapat mengajukan konseling baru.');
         }
+        // --- PAGAR ALUMNI SELESAI ---
 
-        return view('konsultasi.create', compact('guruList', 'jadwalList'));
+        // ... sisa kode create yang lama ...
+        $guruBk = User::where('role', 'guru_bk')->get();
+        return view('siswa.konsultasi.create', compact('guruBk'));
     }
-
     /**
      * Menyimpan permintaan janji temu baru dari siswa.
      */
     public function store(Request $request)
     {
+        // --- PAGAR ALUMNI MULAI ---
+        $siswa = Auth::user();
+        if ($siswa->biodataSiswa && ($siswa->biodataSiswa->status === 'Lulus' || $siswa->biodataSiswa->tahun_lulus != null)) {
+             return redirect()->route('dashboard');
+        }
+        // --- PAGAR ALUMNI SELESAI ---
+        
         $request->validate([
             'guru_id' => 'required|exists:users,id',
             'tanggal' => 'required|date',

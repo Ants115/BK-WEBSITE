@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Kelas;
@@ -12,7 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
-use Barryvdh\DomPDF\Facade\Pdf;
+
 
 class SiswaController extends Controller
 {
@@ -208,5 +210,46 @@ class SiswaController extends Controller
         $kelasId = $siswa->biodataSiswa->kelas_id ?? null;
         $siswa->delete();
         return redirect()->route('admin.siswa.index', ['kelas_id' => $kelasId])->with('success', 'Siswa dihapus.');
+    }
+
+    public function cetakSuratPeringatan(User $siswa)
+    {
+        if ($siswa->role !== 'siswa') {
+            abort(404);
+        }
+
+        // Load relasi lengkap
+        $siswa->load(['biodataSiswa.kelas.jurusan', 'pelanggaranSiswa.pelanggaran']);
+
+        // Hitung Total Poin
+        $totalPoin = $siswa->pelanggaranSiswa->sum(fn ($item) => $item->pelanggaran->poin ?? 0);
+
+        // Tentukan Jenis Surat
+        $jenisSurat = null;
+        if ($totalPoin >= 100) $jenisSurat = 'SURAT PERINGATAN 3 (SP-3)';
+        elseif ($totalPoin >= 50) $jenisSurat = 'SURAT PERINGATAN 2 (SP-2)';
+        elseif ($totalPoin >= 25) $jenisSurat = 'SURAT PERINGATAN 1 (SP-1)';
+        else {
+            return redirect()->back()->with('error', 'Total poin siswa (' . $totalPoin . ') belum mencapai batas untuk menerbitkan surat peringatan.');
+        }
+
+        // Data yang dikirim ke View PDF
+        $data = [
+            'siswa' => $siswa,
+            'totalPoin' => $totalPoin,
+            'jenisSurat' => $jenisSurat,
+            'tanggalCetak' => Carbon::now()->locale('id')->isoFormat('D MMMM Y'),
+            'nomorSurat' => 'BK/' . date('Y') . '/' . rand(100, 999), // Contoh nomor surat random
+        ];
+
+        // Generate PDF
+        // Pastikan view ini kita buat di Langkah 2
+        $pdf = Pdf::loadView('admin.siswa.template-surat', $data);
+        
+        // Atur ukuran kertas F4 atau A4
+        $pdf->setPaper('A4', 'portrait');
+
+        // Stream (Tampilkan di browser)
+        return $pdf->stream('SP-' . $siswa->name . '.pdf');
     }
 }

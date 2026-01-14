@@ -197,43 +197,127 @@
                     }
                 </script>
 
-            {{-- ========================================== --}}
-            {{-- MODE 2: TAMPILAN SELEKTOR KELAS (GRID)     --}}
-            {{-- ========================================== --}}
-            @else
-                <div class="space-y-8">
-                    @foreach($jurusans as $jurusan)
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                                <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">
-                                    {{ $jurusan->singkatan }}
-                                </span>
-                                {{ $jurusan->nama_jurusan }}
-                            </h3>
-                            
-                            @if($jurusan->kelas->count() > 0)
-                                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                                    @foreach($jurusan->kelas as $kelasItem)
-                                        <a href="{{ route('admin.siswa.index', ['kelas_id' => $kelasItem->id]) }}" 
-                                           class="group relative block p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-indigo-50 hover:border-indigo-300 transition-all duration-200 text-center">
-                                            
-                                            <div class="text-lg font-bold text-gray-700 group-hover:text-indigo-700">
-                                                {{ $kelasItem->nama_kelas }}
-                                            </div>
-                                            
-                                            {{-- Indikator Jumlah Siswa (Optional: Butuh withCount di controller jika mau akurat) --}}
-                                            <div class="mt-1 text-xs text-gray-400 group-hover:text-indigo-500">
-                                                Klik untuk lihat
-                                            </div>
-                                        </a>
-                                    @endforeach
-                                </div>
-                            @else
-                                <p class="text-sm text-gray-400 italic">Belum ada kelas untuk jurusan ini.</p>
-                            @endif
+           
+           @else
+                {{-- FORM WRAPPER UNTUK CHECKBOX --}}
+                <form action="{{ route('admin.kelas.destroyMultiple') }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus kelas yang dipilih?');">
+                    @csrf
+                    @method('DELETE')
+
+                    {{-- HEADER TOOLS --}}
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Daftar Kelas</h3>
+                            <p class="text-sm text-gray-500">Pilih kelas untuk melihat siswa, atau gunakan checkbox untuk menghapus.</p>
                         </div>
-                    @endforeach
-                </div>
+                        
+                        {{-- TOMBOL HAPUS MASSAL --}}
+                        <button type="submit" id="deleteBtn" disabled 
+                                class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-600 transition opacity-50 cursor-not-allowed flex items-center shadow-sm">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            Hapus Terpilih (<span id="countSelected">0</span>)
+                        </button>
+                    </div>
+
+                    <div class="space-y-8">
+                        @foreach($jurusans as $jurusan)
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                                        <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">
+                                            {{ $jurusan->singkatan }}
+                                        </span>
+                                        {{ $jurusan->nama_jurusan }}
+                                    </h3>
+                                    
+                                    {{-- Opsi Select All per Jurusan (Opsional) --}}
+                                    <button type="button" onclick="selectAllInJurusan('jurusan-{{ $jurusan->id }}')" class="text-xs text-indigo-600 hover:underline">
+                                        Pilih Semua {{ $jurusan->singkatan }}
+                                    </button>
+                                </div>
+                                
+                                @if($jurusan->kelas->count() > 0)
+                                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4" id="jurusan-{{ $jurusan->id }}">
+                                        @foreach($jurusan->kelas as $kelasItem)
+                                            
+                                            {{-- CARD KELAS --}}
+                                            <div class="relative group bg-gray-50 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200">
+                                                
+                                                {{-- HEADER CARD: Checkbox & Edit --}}
+                                                <div class="flex justify-between items-center p-2 border-b border-gray-100 bg-white rounded-t-lg">
+                                                    {{-- Checkbox Hapus --}}
+                                                    <input type="checkbox" name="ids[]" value="{{ $kelasItem->id }}" 
+                                                           class="item-checkbox w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer">
+                                                    
+                                                    {{-- Tombol Edit (Pensil) --}}
+                                                    <a href="{{ route('admin.kelas.edit', $kelasItem->id) }}" 
+                                                       class="text-gray-400 hover:text-green-600 transition" title="Edit Kelas">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                                    </a>
+                                                </div>
+
+                                                {{-- BODY CARD: Link ke Siswa --}}
+                                                <a href="{{ route('admin.siswa.index', ['kelas_id' => $kelasItem->id]) }}" class="block p-4 text-center">
+                                                    <div class="text-lg font-bold text-gray-700 group-hover:text-indigo-700">
+                                                        {{ $kelasItem->nama_kelas }}
+                                                    </div>
+                                                    <div class="mt-1 text-xs text-gray-400 group-hover:text-indigo-500">
+                                                        Lihat Siswa &rarr;
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <p class="text-sm text-gray-400 italic">Belum ada kelas.</p>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </form>
+
+                {{-- SCRIPT SEDERHANA UNTUK COUNT CHECKBOX --}}
+                <script>
+                    const checkboxes = document.querySelectorAll('.item-checkbox');
+                    const deleteBtn = document.getElementById('deleteBtn');
+                    const countSpan = document.getElementById('countSelected');
+
+                    function updateDeleteButton() {
+                        const checkedCount = document.querySelectorAll('.item-checkbox:checked').length;
+                        countSpan.innerText = checkedCount;
+                        
+                        if (checkedCount > 0) {
+                            deleteBtn.disabled = false;
+                            deleteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        } else {
+                            deleteBtn.disabled = true;
+                            deleteBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        }
+                    }
+
+                    checkboxes.forEach(chk => {
+                        chk.addEventListener('change', updateDeleteButton);
+                    });
+
+                    // Fitur Pilih Semua per Jurusan
+                    function selectAllInJurusan(containerId) {
+                        const container = document.getElementById(containerId);
+                        const inputs = container.querySelectorAll('input[type="checkbox"]');
+                        let allChecked = true;
+                        
+                        // Cek apakah semua sudah tercentang
+                        inputs.forEach(input => {
+                            if (!input.checked) allChecked = false;
+                        });
+
+                        // Toggle
+                        inputs.forEach(input => {
+                            input.checked = !allChecked;
+                        });
+
+                        updateDeleteButton();
+                    }
+                </script>
             @endif
 
         </div>

@@ -10,7 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Illuminate\Support\Str; // Tambahkan ini untuk Slug
+use Illuminate\Support\Str;
 
 class KelasController extends Controller
 {
@@ -27,14 +27,16 @@ class KelasController extends Controller
             $query->where('nama_kelas', 'like', "%{$search}%");
         }
 
-        $kelasList = $query
+        // PERBAIKAN: Ubah nama variabel jadi $kelas (bukan $kelasList)
+        // Agar sesuai dengan View index.blade.php
+        $kelas = $query
             ->orderBy('nama_kelas', 'asc')
-            ->paginate(12) // Saya ubah jadi 12 biar pas grid 3x4 atau 4x3
+            ->paginate(12)
             ->withQueryString();
 
         return view('admin.kelas.index', [
-            'kelasList' => $kelasList,
-            'search'    => $search,
+            'kelas'  => $kelas, // <--- Ini yang bikin error tadi
+            'search' => $search,
         ]);
     }
 
@@ -46,8 +48,7 @@ class KelasController extends Controller
         $tingkatans = Tingkatan::orderBy('id')->get();
         $jurusans   = Jurusan::orderBy('id')->get();
 
-        // Konsisten pakai nama $waliCandidates
-        $waliCandidates = User::whereIn('role', ['guru_bk', 'wali_kelas'])
+        $waliCandidates = User::whereIn('role', ['guru_bk', 'wali_kelas', 'staf_guru']) // Tambahkan staf_guru jika perlu
             ->orderBy('name')
             ->get();
 
@@ -66,9 +67,7 @@ class KelasController extends Controller
             'wali_kelas_id' => ['nullable', 'integer', 'exists:users,id'],
         ]);
 
-        // Otomatis buat slug (nama_unik)
         $data['nama_unik'] = Str::slug($data['nama_kelas']);
-        // Default tahun ajaran (bisa diubah nanti jika mau input manual)
         $data['tahun_ajaran'] = '2025/2026';
 
         Kelas::create($data);
@@ -89,21 +88,21 @@ class KelasController extends Controller
     /**
      * Form edit kelas.
      */
-    public function edit(Kelas $kela) // Laravel binding (param harus sama dengan route list)
+    public function edit(Kelas $kela) // Pastikan parameter di route list sesuai
     {
-        // Fix param binding (kadang laravel baca {kela} bukan {kelas})
+        // Jika route parameter kamu {kela}, maka variabel ini $kela
+        // Kita ubah jadi $kelas biar enak dipakai di view
         $kelas = $kela;
 
         $tingkatans = Tingkatan::orderBy('id')->get();
         $jurusans   = Jurusan::orderBy('id')->get();
 
-        $waliCandidates = User::whereIn('role', ['guru_bk', 'wali_kelas'])
+        $waliCandidates = User::whereIn('role', ['guru_bk', 'wali_kelas', 'staf_guru'])
             ->orderBy('name')
             ->get();
 
         return view('admin.kelas.edit', compact('kelas', 'tingkatans', 'jurusans', 'waliCandidates'));
     }
-
 
     /**
      * Update data kelas.
@@ -119,7 +118,6 @@ class KelasController extends Controller
             'wali_kelas_id' => ['nullable', 'integer', 'exists:users,id'],
         ]);
 
-        // Update slug jika nama berubah
         $data['nama_unik'] = Str::slug($data['nama_kelas']);
 
         $kelas->update($data);
@@ -130,12 +128,10 @@ class KelasController extends Controller
     }
 
     /**
-     * Hapus kelas.
+     * Hapus satu kelas.
      */
     public function destroy($id): RedirectResponse
     {
-        // Cek relasi ke siswa (biodataSiswa atau biodataSiswas sesuai model kamu)
-        // Pastikan nama relasi di Model Kelas.php adalah 'biodataSiswa'
         $kelas = Kelas::withCount('biodataSiswa')->findOrFail($id);
 
         if ($kelas->biodata_siswa_count > 0) {
@@ -149,5 +145,29 @@ class KelasController extends Controller
         return redirect()
             ->route('admin.kelas.index')
             ->with('success', 'Data kelas berhasil dihapus.');
+    }
+
+    /**
+     * Hapus banyak kelas sekaligus (Bulk Delete).
+     */
+    public function destroyMultiple(Request $request): RedirectResponse
+    {
+        $ids = $request->input('ids'); 
+
+        if (!$ids || count($ids) == 0) {
+            return redirect()->back()->with('error', 'Tidak ada kelas yang dipilih.');
+        }
+
+        $kelasAdaSiswa = Kelas::whereIn('id', $ids)
+            ->whereHas('biodataSiswa') 
+            ->count();
+
+        if ($kelasAdaSiswa > 0) {
+            return redirect()->back()->with('error', 'Gagal hapus! Beberapa kelas yang dipilih masih memiliki siswa.');
+        }
+
+        Kelas::whereIn('id', $ids)->delete();
+
+        return redirect()->back()->with('success', count($ids) . ' kelas berhasil dihapus.');
     }
 }

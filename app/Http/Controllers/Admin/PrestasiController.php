@@ -6,25 +6,27 @@ use App\Http\Controllers\Controller;
 use App\Models\Prestasi;
 use App\Models\User;
 use App\Models\Kelas;
+use App\Models\Notifikasi; // Tambahan untuk notifikasi
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth; // Tambahan untuk Auth
 
 class PrestasiController extends Controller
 {
     /**
-     * Daftar semua prestasi (dengan filter lengkap).
+     * Daftar semua prestasi (Menu Sidebar - dengan filter lengkap).
      */
     public function index(Request $request): View
     {
         $query = Prestasi::with(['siswa.biodataSiswa.kelas'])
             ->orderBy('tanggal', 'desc');
 
-        $search    = $request->query('search');
-        $tingkat   = $request->query('tingkat');
-        $kategori  = $request->query('kategori');
-        $kelasId   = $request->query('kelas_id');
-        $tahun     = $request->query('tahun');
+        $search   = $request->query('search');
+        $tingkat  = $request->query('tingkat');
+        $kategori = $request->query('kategori');
+        $kelasId  = $request->query('kelas_id');
+        $tahun    = $request->query('tahun');
 
         // Filter search: judul prestasi / nama siswa
         if ($search) {
@@ -36,33 +38,19 @@ class PrestasiController extends Controller
             });
         }
 
-        // Filter tingkat
-        if ($tingkat) {
-            $query->where('tingkat', $tingkat);
-        }
-
-        // Filter kategori
-        if ($kategori) {
-            $query->where('kategori', $kategori);
-        }
-
-        // Filter kelas (via biodata_siswa.kelas_id)
+        if ($tingkat)  $query->where('tingkat', $tingkat);
+        if ($kategori) $query->where('kategori', $kategori);
         if ($kelasId) {
             $query->whereHas('siswa.biodataSiswa', function ($q) use ($kelasId) {
                 $q->where('kelas_id', $kelasId);
             });
         }
-
-        // Filter tahun (berdasarkan kolom tanggal)
-        if ($tahun) {
-            $query->whereYear('tanggal', $tahun);
-        }
+        if ($tahun) $query->whereYear('tanggal', $tahun);
 
         $prestasis = $query->paginate(15)->withQueryString();
 
-        // Data untuk dropdown
+        // Data untuk dropdown filter
         $kelasList = Kelas::orderBy('nama_kelas')->get();
-
         $tahunOptions = Prestasi::selectRaw('YEAR(tanggal) as tahun')
             ->whereNotNull('tanggal')
             ->groupBy('tahun')
@@ -85,25 +73,17 @@ class PrestasiController extends Controller
     }
 
     /**
-     * Halaman rekap prestasi (ringkasan per kelas / tingkat / kategori).
+     * Halaman rekap prestasi (Menu Sidebar - Statistik).
      */
     public function rekap(Request $request): View
     {
         $tahun = $request->query('tahun');
-
-        // Query dasar
         $base = Prestasi::query();
 
-        if ($tahun) {
-            $base->whereYear('tanggal', $tahun);
-        }
+        if ($tahun) $base->whereYear('tanggal', $tahun);
 
-        // Ringkasan umum
         $totalPrestasi = (clone $base)->count();
-
-        $totalSiswa = (clone $base)
-            ->distinct('siswa_id')
-            ->count('siswa_id');
+        $totalSiswa = (clone $base)->distinct('siswa_id')->count('siswa_id');
 
         // Rekap per kelas
         $rekapPerKelas = (clone $base)
@@ -120,21 +100,9 @@ class PrestasiController extends Controller
             ->orderBy('kelas.nama_kelas')
             ->get();
 
-        // Rekap per tingkat
-        $rekapPerTingkat = (clone $base)
-            ->selectRaw('tingkat, COUNT(*) as total_prestasi')
-            ->groupBy('tingkat')
-            ->orderBy('tingkat')
-            ->get();
+        $rekapPerTingkat = (clone $base)->selectRaw('tingkat, COUNT(*) as total_prestasi')->groupBy('tingkat')->orderBy('tingkat')->get();
+        $rekapPerKategori = (clone $base)->selectRaw('kategori, COUNT(*) as total_prestasi')->groupBy('kategori')->orderBy('kategori')->get();
 
-        // Rekap per kategori
-        $rekapPerKategori = (clone $base)
-            ->selectRaw('kategori, COUNT(*) as total_prestasi')
-            ->groupBy('kategori')
-            ->orderBy('kategori')
-            ->get();
-
-        // Pilihan tahun di dropdown
         $tahunOptions = Prestasi::selectRaw('YEAR(tanggal) as tahun')
             ->whereNotNull('tanggal')
             ->groupBy('tahun')
@@ -142,103 +110,120 @@ class PrestasiController extends Controller
             ->pluck('tahun')
             ->toArray();
 
-        return view('admin.prestasi.rekap', [
-            'tahun'            => $tahun,
-            'tahunOptions'     => $tahunOptions,
-            'totalPrestasi'    => $totalPrestasi,
-            'totalSiswa'       => $totalSiswa,
-            'rekapPerKelas'    => $rekapPerKelas,
-            'rekapPerTingkat'  => $rekapPerTingkat,
-            'rekapPerKategori' => $rekapPerKategori,
-        ]);
+        return view('admin.prestasi.rekap', compact(
+            'tahun', 'tahunOptions', 'totalPrestasi', 'totalSiswa', 
+            'rekapPerKelas', 'rekapPerTingkat', 'rekapPerKategori'
+        ));
     }
 
-    /**
-     * Form tambah prestasi.
-     */
+    // ================================================================
+    // CRUD STANDAR (Biasanya dipakai di menu Prestasi Siswa sidebar)
+    // ================================================================
+
     public function create(): View
     {
-        $siswas = User::where('role', 'siswa')
-            ->with('biodataSiswa.kelas')
-            ->orderBy('name')
-            ->get();
-
+        $siswas = User::where('role', 'siswa')->with('biodataSiswa.kelas')->orderBy('name')->get();
         return view('admin.prestasi.create', [
-            'siswas'          => $siswas,
-            'tingkatOptions'  => Prestasi::TINGKAT_OPTIONS,
+            'siswas' => $siswas,
+            'tingkatOptions' => Prestasi::TINGKAT_OPTIONS,
             'kategoriOptions' => Prestasi::KATEGORI_OPTIONS,
         ]);
     }
 
-    /**
-     * Simpan prestasi baru.
-     */
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'siswa_id'   => 'required|exists:users,id',
             'judul'      => 'required|string|max:255',
-            'tingkat'    => 'required|string|max:100',
-            'kategori'   => 'required|string|max:100',
+            'tingkat'    => 'required|string',
+            'kategori'   => 'required|string',
             'tanggal'    => 'required|date',
             'keterangan' => 'nullable|string',
         ]);
 
         Prestasi::create($validated);
-
-        return redirect()
-            ->route('admin.prestasi.index')
-            ->with('success', 'Data prestasi berhasil ditambahkan.');
+        return redirect()->route('admin.prestasi.index')->with('success', 'Data prestasi berhasil ditambahkan.');
     }
 
-    /**
-     * Form edit prestasi.
-     */
     public function edit(Prestasi $prestasi): View
     {
-        $siswas = User::where('role', 'siswa')
-            ->with('biodataSiswa.kelas')
-            ->orderBy('name')
-            ->get();
-
+        $siswas = User::where('role', 'siswa')->with('biodataSiswa.kelas')->orderBy('name')->get();
         return view('admin.prestasi.edit', [
-            'prestasi'        => $prestasi,
-            'siswas'          => $siswas,
-            'tingkatOptions'  => Prestasi::TINGKAT_OPTIONS,
+            'prestasi' => $prestasi,
+            'siswas' => $siswas,
+            'tingkatOptions' => Prestasi::TINGKAT_OPTIONS,
             'kategoriOptions' => Prestasi::KATEGORI_OPTIONS,
         ]);
     }
 
-    /**
-     * Update data prestasi.
-     */
     public function update(Request $request, Prestasi $prestasi): RedirectResponse
     {
         $validated = $request->validate([
             'siswa_id'   => 'required|exists:users,id',
             'judul'      => 'required|string|max:255',
-            'tingkat'    => 'required|string|max:100',
-            'kategori'   => 'required|string|max:100',
+            'tingkat'    => 'required|string',
+            'kategori'   => 'required|string',
             'tanggal'    => 'required|date',
             'keterangan' => 'nullable|string',
         ]);
 
         $prestasi->update($validated);
+        return redirect()->route('admin.prestasi.index')->with('success', 'Data prestasi berhasil diperbarui.');
+    }
 
-        return redirect()
-            ->route('admin.prestasi.index')
-            ->with('success', 'Data prestasi berhasil diperbarui.');
+    // ================================================================
+    // FITUR KHUSUS POPUP MODAL (Detail Siswa)
+    // ================================================================
+
+    /**
+     * Menangani input dari Modal Popup di halaman detail siswa.
+     */
+    public function storeSiswaPrestasi(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'siswa_id'      => 'required|exists:users,id',
+            'judul'         => 'required|string|max:255',
+            'tingkat'       => 'required|string',
+            'kategori'      => 'required|string',
+            'penyelenggara' => 'nullable|string|max:255',
+            'tanggal'       => 'required|date',
+            'keterangan'    => 'nullable|string',
+        ]);
+
+        // 1. Simpan Data
+        Prestasi::create($validated);
+
+        // 2. Kirim Notifikasi ke Siswa
+        Notifikasi::create([
+            'user_id' => $validated['siswa_id'],
+            'judul'   => 'Selamat! Prestasi Tercatat',
+            'pesan'   => 'Sekolah bangga padamu! Prestasi "' . $validated['judul'] . '" telah dicatat oleh Guru BK.',
+        ]);
+
+        // 3. Redirect kembali ke halaman profil siswa
+        return redirect()->route('admin.siswa.show', $validated['siswa_id'])
+                         ->with('success', 'Prestasi berhasil dicatat! Luar biasa.');
     }
 
     /**
-     * Hapus prestasi.
+     * Hapus prestasi (Support untuk tombol delete di Detail Siswa maupun Index).
+     * Saya ubah parameternya jadi $id supaya fleksibel.
      */
-    public function destroy(Prestasi $prestasi): RedirectResponse
+    public function destroy($id): RedirectResponse
     {
+        $prestasi = Prestasi::findOrFail($id);
+        $siswaId = $prestasi->siswa_id;
+        
         $prestasi->delete();
 
-        return redirect()
-            ->route('admin.prestasi.index')
-            ->with('success', 'Data prestasi berhasil dihapus.');
+        // Cek URL sebelumnya. Jika dari halaman detail siswa, kembalikan ke sana.
+        // Jika tidak, kembalikan ke index.
+        if (str_contains(url()->previous(), '/siswa/')) {
+            return redirect()->route('admin.siswa.show', $siswaId)
+                             ->with('success', 'Data prestasi berhasil dihapus.');
+        }
+
+        return redirect()->route('admin.prestasi.index')
+                         ->with('success', 'Data prestasi berhasil dihapus.');
     }
 }

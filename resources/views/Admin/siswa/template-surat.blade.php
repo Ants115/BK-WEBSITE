@@ -1,66 +1,89 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $jenisSurat }} - {{ $siswa->name }}</title>
     <style>
-        body { font-family: 'Times New Roman', Times, serif; margin: 40px; }
-        .kop-surat { text-align: center; border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 30px; }
-        .kop-surat h1 { margin: 0; font-size: 24px; }
-        .kop-surat p { margin: 5px 0; }
-        .isi-surat { margin-top: 30px; }
-        .isi-surat p { line-height: 1.6; text-align: justify; }
-        .ttd { margin-top: 80px; text-align: right; }
-        .ttd .nama { margin-top: 60px; }
+        body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; }
+        .header { text-align: center; border-bottom: 3px double black; padding-bottom: 10px; margin-bottom: 20px; }
+        .logo { width: 80px; position: absolute; left: 0; top: 0; }
+        .title { font-size: 14pt; font-weight: bold; }
+        .subtitle { font-size: 12pt; }
+        .address { font-size: 10pt; font-style: italic; }
+        .content { margin-top: 20px; }
+        .table-info { width: 100%; margin-bottom: 10px; }
+        .table-info td { vertical-align: top; }
+        .signature { margin-top: 50px; text-align: right; }
+        .box-poin { border: 1px solid black; padding: 10px; text-align: center; font-weight: bold; margin: 20px 0; }
     </style>
 </head>
 <body>
-    <div class="kop-surat">
-        <h1>SMK ANTARTIKA 1 SDA</h1>
-        <p>Jalan Siwalanpanji No. 123, Kota Sidoarjo, Jawa Timur</p>
-        <p>Telepon: (0341) 123456 - Email: info@smaharapan.sch.id</p>
+
+    {{-- KOP SURAT --}}
+    <div class="header">
+        {{-- Jika ada logo, uncomment baris bawah dan ganti path --}}
+        {{-- <img src="{{ public_path('images/logo-sekolah.png') }}" class="logo"> --}}
+        <div class="title">PEMERINTAH PROVINSI JAWA TENGAH</div>
+        <div class="title">DINAS PENDIDIKAN DAN KEBUDAYAAN</div>
+        <div class="title">SMK NEGERI CONTOH WEBSITE</div>
+        <div class="address">Jl. Pendidikan No. 123, Kota Coding, Telp (021) 1234567</div>
     </div>
 
-    <h2 style="text-align: center; text-decoration: underline;">{{ strtoupper($jenisSurat) }}</h2>
-    <p style="text-align: center;">Nomor: 123/SP/IX/2025</p>
+    {{-- ISI SURAT --}}
+    <div class="content">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <span style="font-weight: bold; text-decoration: underline; font-size: 14pt;">{{ $jenisSurat }}</span><br>
+            <span>Nomor: {{ $nomorSurat }}</span>
+        </div>
 
-    <div class="isi-surat">
-        <p>Yang bertanda tangan di bawah ini, Kepala Sekolah SMA Harapan Bangsa, memberikan surat peringatan kepada:</p>
-        
-        <table>
+        <p>Yth. Orang Tua / Wali Murid,</p>
+        <p>Dengan hormat,</p>
+        <p>Berdasarkan data kedisiplinan dan tata tertib sekolah yang berlaku, kami memberitahukan bahwa siswa di bawah ini:</p>
+
+        <table class="table-info">
             <tr>
-                <td style="width: 150px;">Nama</td>
-                <td>: {{ $siswa->name }}</td>
+                <td width="150">Nama Siswa</td>
+                <td width="10">:</td>
+                <td><strong>{{ $siswa->name }}</strong></td>
             </tr>
             <tr>
                 <td>NIS</td>
-                <td>: {{ $siswa->biodataSiswa->nis ?? 'N/A' }}</td>
+                <td>:</td>
+                <td>{{ $siswa->biodataSiswa->nis ?? '-' }}</td>
             </tr>
             <tr>
                 <td>Kelas</td>
-                <td>: {{ $siswa->biodataSiswa->kelas->nama_kelas ?? 'N/A' }}</td>
+                <td>:</td>
+                <td>{{ $siswa->biodataSiswa->kelas->nama_kelas ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>Jurusan</td>
+                <td>:</td>
+                <td>{{ $siswa->biodataSiswa->kelas->jurusan->nama_jurusan ?? '-' }}</td>
             </tr>
         </table>
 
+        <p>Telah mencapai akumulasi poin pelanggaran sebagai berikut:</p>
+
+        <div class="box-poin">
+            TOTAL POIN PELANGGARAN SAAT INI: {{ $totalPoin }} POIN
+        </div>
+
         <p>
-            Berdasarkan catatan Bimbingan Konseling, siswa yang bersangkutan telah mencapai total <strong>{{ $totalPoin }} poin</strong> pelanggaran tata tertib sekolah. 
-            Dengan ini, sekolah memberikan <strong>{{ $jenisSurat }}</strong> sebagai bentuk pembinaan.
+            Sehubungan dengan hal tersebut, kami memberikan <strong>{{ $jenisSurat }}</strong> kepada siswa yang bersangkutan. 
+            Kami memohon kerjasama Bapak/Ibu/Wali Murid untuk memberikan pembinaan lebih lanjut di rumah agar siswa dapat memperbaiki kedisiplinannya.
         </p>
-        <p>
-            Kami berharap siswa yang bersangkutan dapat memperbaiki sikap dan perilakunya serta tidak mengulangi pelanggaran di kemudian hari.
-        </p>
-        <p>
-            Demikian surat peringatan ini kami sampaikan untuk dapat diperhatikan.
-        </p>
+
+        <p>Demikian surat peringatan ini kami sampaikan. Atas perhatian dan kerjasamanya, kami ucapkan terima kasih.</p>
     </div>
 
-    <div class="ttd">
-        <p>Malang, {{ $tanggalCetak }}</p>
-        <p>Kepala Sekolah,</p>
-        <div class="nama">
-            <p><strong>( Nama Kepala Sekolah )</strong></p>
-        </div>
+    {{-- TANDA TANGAN --}}
+    <div class="signature">
+        <p>{{ $tanggalCetak }}</p>
+        <p>Guru Bimbingan Konseling,</p>
+        <br><br><br><br>
+        <p><strong>{{ Auth::user()->name }}</strong></p>
+        <p>NIP. ...........................</p>
     </div>
+
 </body>
 </html>
