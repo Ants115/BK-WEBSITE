@@ -18,61 +18,78 @@
             {{-- Filter --}}
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 border-b border-gray-200">
-                    <form method="GET" action="{{ route('admin.konsultasi.laporan') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                        {{-- Guru BK --}}
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Guru BK</label>
-                            <select name="guru_id" class="block w-full rounded-md border-gray-300 text-sm">
-                                <option value="">Semua Guru BK</option>
-                                @foreach($guruList as $guru)
-                                    <option value="{{ $guru->id }}" {{ $guruId == $guru->id ? 'selected' : '' }}>
-                                        {{ $guru->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+                   <form method="GET" action="{{ route('admin.konsultasi.laporan') }}">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+        
+        {{-- BARIS 1 --}}
+        
+        {{-- Guru BK (Lebar: 4/12) --}}
+        <div class="md:col-span-4">
+            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Guru BK</label>
+            <select name="guru_id" class="block w-full rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <option value="">Semua Guru BK</option>
+                @foreach($guruList as $guru)
+                    <option value="{{ $guru->id }}" {{ $guruId == $guru->id ? 'selected' : '' }}>
+                        {{ $guru->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
-                        {{-- Status --}}
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Status</label>
-                            <select name="status" class="block w-full rounded-md border-gray-300 text-sm">
-                                <option value="">Semua Status</option>
-                                @foreach($statusOptions as $value => $label)
-                                    <option value="{{ $value }}" {{ $status === $value ? 'selected' : '' }}>
-                                        {{ $label }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+        {{-- Status (Lebar: 3/12) --}}
+        <div class="md:col-span-3">
+            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Status</label>
+            <select name="status" class="block w-full rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <option value="">Semua Status</option>
+                @foreach($statusOptions as $value => $label)
+                    <option value="{{ $value }}" {{ $status === $value ? 'selected' : '' }}>
+                        {{ $label }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
-                        {{-- Tanggal Mulai --}}
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Dari Tanggal</label>
-                            <input type="date" name="tanggal_mulai" value="{{ $tanggalMulai }}" class="block w-full rounded-md border-gray-300 text-sm">
-                        </div>
+        {{-- Search Nama Siswa (Lebar: 5/12 - Sisa baris pertama) --}}
+        <div class="md:col-span-5">
+            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Cari Siswa</label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input type="text" name="q" value="{{ $search }}" placeholder="Ketik nama siswa..." class="pl-10 block w-full rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+        </div>
 
-                        {{-- Tanggal Selesai --}}
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Sampai Tanggal</label>
-                            <input type="date" name="tanggal_selesai" value="{{ $tanggalSelesai }}" class="block w-full rounded-md border-gray-300 text-sm">
-                        </div>
+        {{-- BARIS 2 --}}
 
-                        {{-- Search Nama Siswa --}}
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Cari Siswa</label>
-                            <div class="flex space-x-2">
-                                <input type="text" name="q" value="{{ $search }}" placeholder="Nama siswa..." class="flex-1 rounded-md border-gray-300 text-sm">
-                                <button type="submit" class="px-3 py-2 bg-gray-800 text-white text-xs font-semibold rounded-md">
-                                    Terapkan
-                                </button>
-                            </div>
-                            <div class="mt-1">
-                                <a href="{{ route('admin.konsultasi.laporan') }}" class="text-xs text-gray-500 hover:underline">
-                                    Reset filter
-                                </a>
-                            </div>
-                        </div>
-                    </form>
+        {{-- Tanggal Mulai (Lebar: 3/12) --}}
+        <div class="md:col-span-3">
+            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Dari Tanggal</label>
+            <input type="date" name="tanggal_mulai" value="{{ $tanggalMulai }}" class="block w-full rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+        </div>
+
+        {{-- Tanggal Selesai (Lebar: 3/12) --}}
+        <div class="md:col-span-3">
+            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Sampai Tanggal</label>
+            <input type="date" name="tanggal_selesai" value="{{ $tanggalSelesai }}" class="block w-full rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+        </div>
+
+        {{-- Tombol Action (Lebar: 6/12 - Rata Kanan) --}}
+        <div class="md:col-span-6 flex justify-end gap-2">
+            {{-- Tombol Reset (Sekarang jadi tombol abu-abu yang jelas) --}}
+            <a href="{{ route('admin.konsultasi.laporan') }}" class="px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
+                Reset
+            </a>
+
+            {{-- Tombol Terapkan --}}
+            <button type="submit" class="px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                Terapkan Filter
+            </button>
+        </div>
+    </div>
+</form>
                 </div>
             </div>
 

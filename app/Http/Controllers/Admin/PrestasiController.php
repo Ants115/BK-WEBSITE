@@ -121,15 +121,22 @@ class PrestasiController extends Controller
     // ================================================================
 
     public function create(): View
-    {
-        $siswas = User::where('role', 'siswa')->with('biodataSiswa.kelas')->orderBy('name')->get();
-        return view('admin.prestasi.create', [
-            'siswas' => $siswas,
-            'tingkatOptions' => Prestasi::TINGKAT_OPTIONS,
-            'kategoriOptions' => Prestasi::KATEGORI_OPTIONS,
-        ]);
-    }
+{
+    // Gunakan whereHas untuk filter berdasarkan tabel relasi biodata
+    $siswas = User::where('role', 'siswa')
+                  ->whereHas('biodataSiswa', function($query) {
+                      $query->where('status', 'aktif'); // Sesuaikan nama kolom statusmu
+                  })
+                  ->with('biodataSiswa.kelas')
+                  ->orderBy('name')
+                  ->get();
 
+    return view('admin.prestasi.create', [
+        'siswas' => $siswas,
+        'tingkatOptions' => Prestasi::TINGKAT_OPTIONS,
+        'kategoriOptions' => Prestasi::KATEGORI_OPTIONS,
+    ]);
+}
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
