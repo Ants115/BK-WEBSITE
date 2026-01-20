@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\NotifikasiController;
+use App\Http\Controllers\Auth\RegisteredUserController;
 
 // Dashboard siswa & fitur siswa
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
@@ -29,7 +30,31 @@ use App\Http\Controllers\KonsultasiController;
 
 // Wali Kelas
 use App\Http\Controllers\WaliKelas\DashboardController as WaliDashboardController;
+use App\Http\Controllers\DashboardController; // Controller "Satpam" (No 3)
+use App\Http\Controllers\Admin\DashboardController as AdminDashboard; // Controller Admin (No 1)
+use App\Http\Controllers\WaliKelas\DashboardController as WaliDashboard; // Controller Wali (No 2)
 
+// 1. ROUTE UTAMA (Pintu Masuk setelah Login)
+// Ini yang dipanggil saat user membuka domain.com/dashboard
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth'])
+    ->name('dashboard');
+
+
+// 2. GROUP ADMIN
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    // URL ini beda: /admin/dashboard
+    Route::get('/admin/dashboard', [AdminDashboard::class, 'index'])
+        ->name('admin.dashboard');
+});
+
+
+// 3. GROUP WALI KELAS
+Route::middleware(['auth', 'role:walikelas'])->group(function () {
+    // URL ini beda: /wali-kelas/dashboard
+    Route::get('/wali-kelas/dashboard', [WaliDashboard::class, 'index'])
+        ->name('wali.dashboard');
+});
 /*
 |--------------------------------------------------------------------------
 | Halaman Awal
@@ -45,6 +70,17 @@ Route::get('/', function () {
 | ROUTE GLOBAL: semua user login (semua role)
 |--------------------------------------------------------------------------
 */
+
+Route::post('/get-nomor-kelas', [RegisteredUserController::class, 'getNomorKelas'])->name('get.nomor.kelas');
+
+// Group khusus Wali Kelas
+Route::middleware(['auth', 'role:walikelas'])->group(function () {
+    
+    // Route ini yang akan memanggil Controller Wali Kelas kamu
+    Route::get('/wali-kelas/dashboard', [WaliDashboardController::class, 'index'])
+        ->name('wali.dashboard');
+
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // /dashboard = router umum (nanti cek role di controller)

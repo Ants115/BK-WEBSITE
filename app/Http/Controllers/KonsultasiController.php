@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Konsultasi;
+use App\Models\JadwalKonseling; // Pastikan Model Jadwal Benar
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -23,18 +24,20 @@ class KonsultasiController extends Controller
     {
         // --- PAGAR ALUMNI MULAI ---
         $siswa = Auth::user();
-        
-        // Cek apakah data biodata ada DAN statusnya 'Lulus' (atau tahun_lulus terisi)
         if ($siswa->biodataSiswa && ($siswa->biodataSiswa->status === 'Lulus' || $siswa->biodataSiswa->tahun_lulus != null)) {
             return redirect()->route('dashboard')
                 ->with('error', 'Maaf, Alumni tidak dapat mengajukan konseling baru.');
         }
         // --- PAGAR ALUMNI SELESAI ---
 
-        // ... sisa kode create yang lama ...
         $guruBk = User::where('role', 'guru_bk')->get();
-        return view('siswa.konsultasi.create', compact('guruBk'));
+
+        // Mengambil jadwal guru untuk sidebar kanan
+        $jadwalList = JadwalKonseling::with('guru')->orderBy('hari')->get(); 
+
+        return view('konsultasi.create', compact('guruBk', 'jadwalList'));
     }
+
     /**
      * Menyimpan permintaan janji temu baru dari siswa.
      */
@@ -47,20 +50,29 @@ class KonsultasiController extends Controller
         }
         // --- PAGAR ALUMNI SELESAI ---
         
+        // 1. VALIDASI DATA
         $request->validate([
             'guru_id' => 'required|exists:users,id',
-            'tanggal' => 'required|date',
-            'jam' => 'required',
-            'topik' => 'required|string|min:5',
+            'jadwal_pengajuan' => 'required|date', // Input dari datetime-local
+            'topik' => 'required|string|min:3',
+            'keluhan' => 'required|string', // Keluhan wajib diisi untuk detail
         ]);
 
-        $jadwalDiminta = Carbon::parse($request->tanggal . ' ' . $request->jam)->toDateTimeString();
+        // 2. FORMAT JADWAL
+        // Mengubah string datetime-local HTML menjadi format database
+        $jadwalDiminta = Carbon::parse($request->jadwal_pengajuan);
 
+        // 3. GABUNGKAN TOPIK & KELUHAN
+        // Simpan 'Keluhan' ke dalam kolom 'topik' agar tersimpan di database
+        $topikLengkap = $request->topik . " - (Detail: " . $request->keluhan . ")";
+
+        // 4. SIMPAN KE DATABASE
         Konsultasi::create([
             'siswa_id' => Auth::id(),
             'guru_id' => $request->guru_id,
             'jadwal_diminta' => $jadwalDiminta,
-            'topik' => $request->topik,
+            'topik' => $topikLengkap,
+            'status' => 'Menunggu Persetujuan',
         ]);
 
         return redirect()->route('konsultasi.riwayat')->with('success', 'Permintaan konsultasi berhasil dikirim!');
@@ -68,7 +80,6 @@ class KonsultasiController extends Controller
 
     /**
      * Menampilkan riwayat konsultasi siswa.
-     * Kode ini mengambil SEMUA status (Menunggu, Disetujui, Ditolak, dll).
      */
     public function riwayat()
     {
@@ -78,6 +89,15 @@ class KonsultasiController extends Controller
                             ->get();
         
         return view('konsultasi.riwayat', compact('riwayat'));
+    }
+
+    /**
+     * Menampilkan tiket detail konsultasi.
+     */
+    public function show($id)
+    {
+        $konsultasi = Konsultasi::where('siswa_id', Auth::id())->findOrFail($id);
+        return view('konsultasi.tiket', compact('konsultasi'));
     }
 
     //======================================================================
@@ -93,8 +113,6 @@ class KonsultasiController extends Controller
                                 ->orderBy('created_at', 'desc')
                                 ->get();
 
-        // Optional: properti "jadwal_aktif" bisa di-handle di accessor model,
-        // untuk sekarang kita pakai apa adanya di view.
         return view('admin.konsultasi.index', compact('permintaan'));
     }
 
@@ -103,12 +121,10 @@ class KonsultasiController extends Controller
      */
     public function laporan(Request $request)
     {
-        // Pastikan hanya guru BK yang boleh akses
         if (!Auth::check() || Auth::user()->role !== 'guru_bk') {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
-        // Data untuk filter
         $guruList = User::where('role', 'guru_bk')->orderBy('name')->get();
 
         $statusOptions = [
@@ -119,14 +135,12 @@ class KonsultasiController extends Controller
             'Selesai'              => 'Selesai',
         ];
 
-        // Ambil nilai filter dari query string
         $guruId         = $request->query('guru_id');
         $status         = $request->query('status');
         $tanggalMulai   = $request->query('tanggal_mulai');
         $tanggalSelesai = $request->query('tanggal_selesai');
         $search         = $request->query('q');
 
-        // Query dasar
         $query = Konsultasi::with(['siswa', 'guru']);
 
         if ($guruId) {
@@ -137,8 +151,6 @@ class KonsultasiController extends Controller
             $query->where('status', $status);
         }
 
-        // Untuk laporan, kita filter berdasarkan tanggal dibuat (created_at).
-        // Kalau kamu nanti mau ganti ke jadwal_disetujui juga bisa.
         if ($tanggalMulai) {
             $query->whereDate('created_at', '>=', $tanggalMulai);
         }
@@ -153,43 +165,26 @@ class KonsultasiController extends Controller
             });
         }
 
-        // Simpan base query untuk rekap
         $baseQuery = clone $query;
-
-        // Data utama tabel (paginate)
         $konsultasi = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
-        // Rekap per status
         $rekapStatus = (clone $baseQuery)
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        // Rekap per guru
         $rekapGuru = (clone $baseQuery)
             ->selectRaw('guru_id, COUNT(*) as total')
             ->groupBy('guru_id')
             ->get();
 
-        // Total semua
         $totalSemua = (clone $baseQuery)->count();
-
-        // Map guru id => object agar tidak query berulang di view
         $guruMap = $guruList->keyBy('id');
 
         return view('admin.konsultasi.laporan', compact(
-            'konsultasi',
-            'guruList',
-            'guruMap',
-            'statusOptions',
-            'rekapStatus',
-            'rekapGuru',
-            'totalSemua',
-            'guruId',
-            'status',
-            'tanggalMulai',
-            'tanggalSelesai',
-            'search'
+            'konsultasi', 'guruList', 'guruMap', 'statusOptions',
+            'rekapStatus', 'rekapGuru', 'totalSemua',
+            'guruId', 'status', 'tanggalMulai', 'tanggalSelesai', 'search'
         ));
     }
 
@@ -203,7 +198,6 @@ class KonsultasiController extends Controller
             'jadwal_disetujui' => $konsultasi->jadwal_diminta 
         ]);
 
-        // Kirim Notifikasi
         $konsultasi->siswa->notify(new StatusKonsultasiNotification($konsultasi, 'Permintaan konsultasi Anda telah disetujui.'));
 
         return back()->with('success', 'Permintaan konsultasi telah disetujui.');
@@ -221,7 +215,6 @@ class KonsultasiController extends Controller
             'pesan_guru' => $request->pesan_guru
         ]);
 
-        // Kirim Notifikasi
         $konsultasi->siswa->notify(new StatusKonsultasiNotification($konsultasi, 'Permintaan konsultasi Anda ditolak.'));
 
         return back()->with('success', 'Permintaan konsultasi telah ditolak.');
@@ -246,7 +239,6 @@ class KonsultasiController extends Controller
             'pesan_guru' => $request->pesan_guru
         ]);
 
-        // Kirim Notifikasi
         $konsultasi->siswa->notify(new StatusKonsultasiNotification($konsultasi, 'Jadwal konsultasi Anda diubah oleh Guru.'));
 
         return back()->with('success', 'Permintaan konsultasi telah dijadwalkan ulang.');
@@ -268,17 +260,14 @@ class KonsultasiController extends Controller
 
     public function destroy(Konsultasi $konsultasi)
     {
-        // Cek 1: Pastikan yang menghapus adalah pemilik data sendiri
         if ($konsultasi->siswa_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
-        // Cek 2: Pastikan status masih 'Menunggu Persetujuan'
         if ($konsultasi->status !== 'Menunggu Persetujuan') {
             return back()->with('error', 'Konsultasi yang sudah diproses tidak dapat dibatalkan.');
         }
 
-        // Hapus data
         $konsultasi->delete();
 
         return back()->with('success', 'Permintaan konsultasi berhasil dibatalkan.');
@@ -286,20 +275,16 @@ class KonsultasiController extends Controller
 
     public function cetakTiket(Konsultasi $konsultasi)
     {
-        // 1. Validasi Keamanan (Hanya pemilik data yang boleh cetak)
         if ($konsultasi->siswa_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
-        // 2. Pastikan statusnya sudah disetujui
         if ($konsultasi->status !== 'Disetujui') {
             return back()->with('error', 'Tiket hanya bisa dicetak jika status Disetujui.');
         }
 
-        // 3. Load View PDF
         $pdf = Pdf::loadView('konsultasi.tiket', compact('konsultasi'));
         
-        // 4. Download File
         return $pdf->download('Tiket-Konsultasi-'.$konsultasi->id.'.pdf');
     }
 
@@ -314,7 +299,6 @@ class KonsultasiController extends Controller
             'hasil_konseling' => $request->hasil_konseling
         ]);
 
-        // Kirim notifikasi ke siswa (Opsional, tapi bagus)
         $konsultasi->siswa->notify(new StatusKonsultasiNotification($konsultasi, 'Sesi konsultasi telah selesai. Lihat hasilnya.'));
 
         return back()->with('success', 'Konsultasi ditandai selesai.');

@@ -72,4 +72,21 @@ class RegisteredUserController extends Controller
 
         return redirect()->route('dashboard');
     }
+
+    // ... function store dan create yang lama ...
+
+    /**
+     * Mengambil daftar nomor kelas berdasarkan tingkatan dan jurusan
+     */
+    public function getNomorKelas(Request $request)
+    {
+        // Cari kelas yang cocok dengan Tingkatan & Jurusan yang dipilih user
+        $nomorKelas = Kelas::where('tingkatan_id', $request->tingkatan_id)
+                            ->where('jurusan_id', $request->jurusan_id)
+                            ->orderBy('nama_unik') // Urutkan 1, 2, 3...
+                            ->pluck('nama_unik');  // Ambil cuma kolom angkanya
+
+        return response()->json($nomorKelas);
+    }
 }
+

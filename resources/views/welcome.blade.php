@@ -1,195 +1,191 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="UTF-8">
-    <title>Sistem Informasi Bimbingan Konseling</title>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bimbingan Konseling - SMK Antartika 1 Sidoarjo</title>
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-slate-950 antialiased">
-<div class="min-h-screen flex flex-col">
+<body class="antialiased bg-gray-50 text-gray-800 font-sans">
 
-    {{-- NAVBAR --}}
-    <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-            <a href="{{ url('/') }}" class="flex items-center gap-3">
-                {{-- Logo BK – pastikan file ada di: public/images/logo-bk.png --}}
-                <img src="{{ asset('images/logo.png') }}" alt="Logo BK" class="h-9 w-auto">
-                <div class="flex flex-col">
-                    <span class="font-semibold text-sm md:text-base text-slate-800">
-                        Sistem Informasi Bimbingan Konseling
-                    </span>
-                    <span class="text-[10px] md:text-xs text-slate-500 tracking-wide">
-                        SMK ANTARTIKA 1 SDA
-                    </span>
-                </div>
-            </a>
-
-            <div class="flex items-center gap-3 text-xs md:text-sm">
-                <a href="{{ route('login') }}"
-                   class="px-4 py-2 border border-slate-300 rounded-full hover:bg-slate-50 transition">
-                    Masuk
-                </a>
-                <a href="{{ route('register') }}"
-                   class="px-4 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 shadow-sm transition">
-                    Daftar Siswa
-                </a>
+    {{-- NAVBAR SEDERHANA --}}
+    <nav class="absolute top-0 left-0 w-full z-20 px-6 py-6 md:px-12 flex justify-between items-center">
+        {{-- Logo Sekolah --}}
+        <div class="flex items-center gap-3">
+            {{-- Ganti src dengan path logo sekolahmu --}}
+            {{-- <img src="{{ asset('img/logo-sekolah.png') }}" class="h-10 w-auto" alt="Logo"> --}}
+            
+            {{-- Placeholder Logo (Jika belum ada gambar) --}}
+            <div class="h-10 w-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                BK
+            </div>
+            
+            <div class="leading-tight">
+                <h1 class="font-bold text-gray-900 text-lg">SMK ANTARTIKA 1</h1>
+                <p class="text-xs text-gray-500 font-medium tracking-wide">SISTEM INFORMASI BK</p>
             </div>
         </div>
-    </header>
 
-    <main class="flex-1">
-
-        {{-- HERO --}}
-        <section class="relative overflow-hidden">
-            {{-- background gradient + blobs --}}
-            <div class="absolute inset-0 bg-gradient-to-br from-indigo-50 via-slate-50 to-sky-50"></div>
-            <div class="pointer-events-none absolute -left-20 -top-24 h-72 w-72 rounded-full bg-indigo-300/40 blur-3xl"></div>
-            <div class="pointer-events-none absolute -right-16 top-1/3 h-80 w-80 rounded-full bg-sky-300/40 blur-3xl"></div>
-            <div class="pointer-events-none absolute left-1/2 bottom-[-6rem] h-72 w-72 -translate-x-1/2 rounded-full bg-purple-300/30 blur-3xl"></div>
-
-            <div class="relative max-w-7xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-12 items-center">
-                <div>
-                    <p class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-indigo-100 text-[11px] font-medium text-indigo-700 mb-4">
-                        Sistem BK Digital • Versi UKK RPL
-                    </p>
-                    <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4 leading-tight">
-                        Catatan BK lebih rapi, aman, dan
-                        <span class="text-indigo-600">siap diakses kapan saja.</span>
-                    </h1>
-                    <p class="text-slate-600 mb-6 text-sm md:text-base max-w-xl">
-                        Di era digital, buku catatan BK mudah hilang, rusak, atau salah tulis.
-                        Sistem ini membantu Guru BK dan Wali Kelas menyimpan data konsultasi,
-                        pelanggaran, dan perkembangan siswa secara terpusat, terstruktur, dan mudah dicari.
-                    </p>
-                    <div class="flex flex-wrap items-center gap-3 text-sm">
-                        <a href="{{ route('login') }}"
-                           class="px-5 py-3 bg-indigo-600 text-white rounded-full shadow-md hover:bg-indigo-700 transition">
-                            Masuk
-                        </a>
-                        <a href="{{ route('register') }}"
-                           class="text-indigo-700 hover:underline">
-                            Daftar akun siswa baru
-                        </a>
-                    </div>
-                </div>
-
-                <div class="bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-slate-100 p-6 space-y-4">
-                    <h2 class="text-lg font-semibold text-slate-800">
-                        Fitur utama sistem
-                    </h2>
-                    <ul class="space-y-2 text-sm text-slate-600 list-disc list-inside">
-                        <li>Pengajuan jadwal konsultasi siswa secara online.</li>
-                        <li>Manajemen poin pelanggaran dan riwayat catatan siswa.</li>
-                        <li>Dashboard statistik untuk Guru BK dan wali kelas.</li>
-                        <li>Proses kenaikan kelas dan arsip alumni otomatis.</li>
-                    </ul>
-                    <p class="text-xs text-slate-400 pt-2">
-                        Dibangun dengan Laravel &amp; Tailwind untuk mendukung UKK RPL
-                        dan pengelolaan BK di sekolah.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        {{-- TENTANG SISTEM --}}
-        <section class="bg-white">
-            <div class="max-w-5xl mx-auto px-6 py-12 space-y-4">
-                <h2 class="inline-flex items-center gap-2 text-2xl font-semibold text-slate-900">
-                    <span class="h-6 w-1 rounded-full bg-indigo-500"></span>
-                    Tentang Sistem Informasi BK
-                </h2>
-                <p class="text-sm md:text-base text-slate-700 leading-relaxed">
-                    Sistem Informasi Bimbingan Konseling ini dirancang sebagai pengganti pencatatan manual
-                    di buku atau kertas. Melalui aplikasi ini, Guru BK dan Wali Kelas dapat mencatat
-                    konsultasi, pelanggaran, serta perkembangan siswa dari awal masuk hingga lulus secara
-                    terstruktur dan terdokumentasi dengan baik.
-                </p>
-                <p class="text-sm md:text-base text-slate-700 leading-relaxed">
-                    Tujuannya bukan hanya untuk memenuhi tugas UKK, tetapi benar-benar menjadi alat bantu
-                    sekolah dalam memantau kondisi siswa, mempermudah pembuatan laporan, dan memastikan
-                    setiap keputusan pembinaan didukung oleh data yang lengkap dan akurat.
-                </p>
-            </div>
-        </section>
-
-        {{-- MENGAPA BK DIGITAL PENTING --}}
-        <section class="bg-slate-900">
-            <div class="max-w-5xl mx-auto px-6 py-12">
-                <h2 class="inline-flex items-center gap-2 text-2xl font-semibold text-slate-50 mb-4">
-                    <span class="h-6 w-1 rounded-full bg-indigo-400"></span>
-                    Mengapa BK digital lebih baik daripada catatan manual?
-                </h2>
-                <div class="grid md:grid-cols-2 gap-8 text-sm md:text-base text-slate-100">
-                    <ul class="space-y-3 list-disc list-inside">
-                        <li>
-                            <span class="font-semibold">Catatan tidak mudah hilang.</span><br>
-                            Buku pelanggaran bisa tercecer, rusak, atau hilang.
-                            Di sistem digital, data disimpan di database dan dapat di-backup.
-                        </li>
-                        <li>
-                            <span class="font-semibold">Mengurangi kesalahan pencatatan.</span><br>
-                            Form terstruktur membantu mengurangi salah tulis, duplikasi, atau data yang terlewat.
-                        </li>
-                        <li>
-                            <span class="font-semibold">Riwayat siswa selalu lengkap.</span><br>
-                            Guru BK atau wali kelas baru tetap bisa melihat histori siswa dari tahun-tahun sebelumnya.
-                        </li>
-                    </ul>
-                    <ul class="space-y-3 list-disc list-inside">
-                        <li>
-                            <span class="font-semibold">Pencarian data jauh lebih cepat.</span><br>
-                            Data siswa dapat ditemukan hanya dengan nama atau NIS, tanpa membolak-balik buku.
-                        </li>
-                        <li>
-                            <span class="font-semibold">Mudah membuat rekap dan laporan.</span><br>
-                            Data yang tersimpan dapat direkap per kelas, jenis pelanggaran, atau periode secara otomatis.
-                        </li>
-                        <li>
-                            <span class="font-semibold">Mendukung pengambilan keputusan.</span><br>
-                            Data yang rapi membuat pembinaan dan kebijakan disiplin lebih objektif dan terukur.
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
-        {{-- FITUR UTAMA --}}
-        <section class="bg-slate-950">
-            <div class="max-w-6xl mx-auto px-6 py-12">
-                <h2 class="inline-flex items-center gap-2 text-2xl font-semibold text-slate-50 mb-6">
-                    <span class="h-6 w-1 rounded-full bg-indigo-400"></span>
-                    Fitur utama yang tersedia
-                </h2>
-                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
-                    <div class="bg-gradient-to-br from-indigo-500/10 via-slate-800 to-slate-900 border border-slate-800 rounded-xl p-4 text-slate-100 shadow-sm hover:-translate-y-1 hover:shadow-lg transition">
-                        <h3 class="font-semibold text-slate-50 mb-2">Konsultasi Siswa</h3>
-                        <p>Pengajuan jadwal konsultasi, pemilihan guru BK, dan riwayat pertemuan tersimpan rapi.</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-purple-500/10 via-slate-800 to-slate-900 border border-slate-800 rounded-xl p-4 text-slate-100 shadow-sm hover:-translate-y-1 hover:shadow-lg transition">
-                        <h3 class="font-semibold text-slate-50 mb-2">Pelanggaran &amp; Poin</h3>
-                        <p>Pencatatan jenis pelanggaran, poin, dan total akumulasi setiap siswa.</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-sky-500/10 via-slate-800 to-slate-900 border border-slate-800 rounded-xl p-4 text-slate-100 shadow-sm hover:-translate-y-1 hover:shadow-lg transition">
-                        <h3 class="font-semibold text-slate-50 mb-2">Kenaikan Kelas</h3>
-                        <p>Proses pindah kelas dan kelulusan siswa dengan pemetaan otomatis per tingkatan.</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-emerald-500/10 via-slate-800 to-slate-900 border border-slate-800 rounded-xl p-4 text-slate-100 shadow-sm hover:-translate-y-1 hover:shadow-lg transition">
-                        <h3 class="font-semibold text-slate-50 mb-2">Arsip Alumni</h3>
-                        <p>Data siswa yang sudah lulus dipindahkan ke arsip alumni tanpa menghapus riwayatnya.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    {{-- FOOTER --}}
-    <footer class="border-t border-slate-800 bg-slate-950">
-        <div class="max-w-7xl mx-auto px-6 py-4 text-[11px] text-slate-500 text-center">
-            &copy; {{ date('Y') }} Sistem Informasi Bimbingan Konseling.
-            Dibuat oleh Andhi Lukman. {{-- ganti dengan namamu jika perlu --}}
+        {{-- Auth Links (Pojok Kanan) --}}
+        <div class="hidden md:flex items-center gap-4">
+            @if (Route::has('login'))
+                @auth
+                    <a href="{{ url('/dashboard') }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition">
+                        Dashboard &rarr;
+                    </a>
+                @else
+                    
+                @endauth
+            @endif
         </div>
+    </nav>
+
+    {{-- HERO SECTION (Split Screen) --}}
+    <div class="relative min-h-screen flex flex-col md:flex-row items-center justify-center overflow-hidden">
+        
+        {{-- Background Shape Decoration --}}
+        <div class="absolute -top-40 -right-40 w-[600px] h-[600px] bg-indigo-50 rounded-full blur-3xl opacity-50 -z-10"></div>
+        <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-50 rounded-full blur-3xl opacity-50 -z-10"></div>
+
+        {{-- KIRI: Teks & CTA --}}
+        <div class="w-full md:w-1/2 px-6 md:px-16 lg:px-24 pt-24 md:pt-0 flex flex-col justify-center z-10">
+            
+            <div class="inline-flex self-start items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-wider mb-6">
+                <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+                Portal Layanan Siswa
+            </div>
+
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
+                Teman Cerita & <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">
+                    Masa Depanmu.
+                </span>
+            </h1>
+
+            <p class="text-lg text-gray-600 mb-8 leading-relaxed max-w-lg">
+                Selamat datang di portal Bimbingan Konseling SMK Antartika 1. 
+                Platform ini hadir untuk membantu pengembangan diri, konsultasi karir, 
+                dan pendampingan masalah siswa secara privat dan aman.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4">
+                @if (Route::has('login'))
+                    @auth
+                        <a href="{{ url('/dashboard') }}" class="px-8 py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 hover:shadow-indigo-500/30 transition transform hover:-translate-y-1 text-center">
+                            Akses Dashboard
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="px-8 py-4 bg-gray-900 text-white font-bold rounded-xl shadow-lg hover:bg-black transition transform hover:-translate-y-1 text-center flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                            Masuk Akun
+                        </a>
+
+                        @if (Route::has('register'))
+                            <a href="{{ route('register') }}" class="px-8 py-4 bg-white text-indigo-600 border-2 border-indigo-100 font-bold rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition text-center">
+                                Daftar Siswa Baru
+                            </a>
+                        @endif
+                    @endauth
+                @endif
+            </div>
+
+            <div class="mt-10 flex items-center gap-4 text-sm text-gray-500">
+                <div class="flex -space-x-2">
+                    <div class="w-8 h-8 rounded-full bg-gray-200 border-2 border-white"></div>
+                    <div class="w-8 h-8 rounded-full bg-gray-300 border-2 border-white"></div>
+                    <div class="w-8 h-8 rounded-full bg-gray-400 border-2 border-white"></div>
+                </div>
+                <p>Bergabung dengan <span class="font-bold text-gray-800">1,200+ Siswa</span> lainnya.</p>
+            </div>
+        </div>
+
+        {{-- KANAN: Ilustrasi / Gambar (Visual) --}}
+        <div class="w-full md:w-1/2 h-[50vh] md:h-screen relative bg-gradient-to-br from-indigo-50 to-white flex items-center justify-center">
+            
+            {{-- Pattern Dot --}}
+            <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#4f46e5 1px, transparent 1px); background-size: 32px 32px;"></div>
+
+            {{-- Ilustrasi Utama (Gunakan SVG atau Gambar Sekolah) --}}
+            <div class="relative w-4/5 max-w-md z-10">
+                {{-- KOTAK INFORMASI MELAYANG --}}
+                <div class="absolute -top-12 -left-8 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 animate-bounce-slow">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-green-100 text-green-600 rounded-lg">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase">Status Konseling</p>
+                            <p class="text-sm font-bold text-gray-800">Privasi Terjaga 🔒</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="absolute -bottom-12 -right-4 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 animate-bounce-slow" style="animation-delay: 1s;">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase">Respon Guru</p>
+                            <p class="text-sm font-bold text-gray-800">Cepat & Ramah</p>
+                        </div>
+                    </div>
+                </div>
+                
+                {{-- GAMBAR ILUSTRASI UTAMA --}}
+                {{-- Kamu bisa ganti src ini dengan gambar gedung sekolah atau ilustrasi siswa --}}
+                <img src="https://cdni.iconscout.com/illustration/premium/thumb/online-education-illustration-download-in-svg-png-gif-file-formats--learning-logo-teacher-study-school-pack-illustrations-4609696.png" 
+                     alt="Counseling Illustration" 
+                     class="w-full h-auto drop-shadow-2xl transform hover:scale-105 transition duration-500">
+            </div>
+        </div>
+    </div>
+
+    {{-- SECTION LAYANAN RINGKAS (Opsional) --}}
+    <div class="bg-white py-12 border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+            <div class="p-6 rounded-2xl bg-gray-50 hover:bg-indigo-50 transition border border-gray-100">
+                <div class="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center text-white mb-4 mx-auto md:mx-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Konseling Pribadi</h3>
+                <p class="text-gray-600 text-sm">Ceritakan masalahmu secara rahasia kepada Guru BK yang siap mendengarkan.</p>
+            </div>
+            <div class="p-6 rounded-2xl bg-gray-50 hover:bg-blue-50 transition border border-gray-100">
+                <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center text-white mb-4 mx-auto md:mx-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Bimbingan Karir</h3>
+                <p class="text-gray-600 text-sm">Konsultasi mengenai rencana kuliah, kerja, atau wirausaha setelah lulus.</p>
+            </div>
+            <div class="p-6 rounded-2xl bg-gray-50 hover:bg-green-50 transition border border-gray-100">
+                <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center text-white mb-4 mx-auto md:mx-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Catatan Kedisiplinan</h3>
+                <p class="text-gray-600 text-sm">Pantau poin pelanggaran dan prestasi siswa secara transparan dan real-time.</p>
+            </div>
+        </div>
+    </div>
+
+    {{-- FOOTER SIMPLE --}}
+    <footer class="bg-gray-50 py-8 text-center text-sm text-gray-400">
+        &copy; {{ date('Y') }} SMK Antartika 1 Sidoarjo. Sistem Informasi Bimbingan Konseling.
     </footer>
-</div>
+
+    {{-- CUSTOM CSS ANIMATION --}}
+    <style>
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(-5%); }
+            50% { transform: translateY(5%); }
+        }
+        .animate-bounce-slow {
+            animation: bounce-slow 3s infinite ease-in-out;
+        }
+    </style>
 </body>
 </html>
