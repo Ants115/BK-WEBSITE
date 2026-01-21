@@ -18,71 +18,62 @@ use App\Models\Konsultasi;
 class DashboardController extends Controller
 {
     
-    public function index(): View
-    {
-        // ==========================================
-        // BAGIAN 1: STATISTIK PELANGGARAN & SISWA
-        // ==========================================
+   public function index(): View   
+{
+    // 1. Total Siswa Aktif (Status 'Aktif' di tabel biodata_siswas)
+    $totalSiswaAktif = \App\Models\BiodataSiswa::where('status', 'Aktif')->count();
+    
+    // 2. Total Catatan Pelanggaran (Menghitung baris di tabel pivot)
+    $totalPelanggaran = \DB::table('catatan_pelanggaran')->count();
 
-        // 1. Data Statistik Dasar
-        
-        // [PERUBAHAN UTAMA DI SINI]
-        // Dulu: Menghitung semua User role siswa.
-        // Sekarang: Menghitung BiodataSiswa yang statusnya 'Aktif' saja.
-        $totalSiswaAktif = BiodataSiswa::where('status', 'Aktif')->count();
-        
-        $totalPelanggaran = PelanggaranSiswa::count();
+    // 3. Data Siswa Poin Tertinggi (Top 5)
+    // Menggunakan selectSub untuk menghitung total poin dari tabel pivot catatan_pelanggaran
+    $siswaPoinTertinggi = \App\Models\User::where('role', 'siswa')
+        ->select('users.id', 'users.name')
+        ->selectSub(function ($query) {
+            $query->from('catatan_pelanggaran')
+                ->whereColumn('siswa_id', 'users.id')
+                ->selectRaw('SUM(poin_saat_itu)');
+        }, 'total_poin')
+        ->orderByDesc('total_poin')
+        ->whereNotNull('id')
+        ->limit(5)
+        ->get();
 
-        // 2. Data Siswa Poin Tertinggi (Top 5)
-        // Kita gunakan cara JOIN milikmu karena ini yang paling stabil
-        $siswaPoinTertinggi = User::where('role', 'siswa')
-            ->join('pelanggaran_siswas', 'users.id', '=', 'pelanggaran_siswas.siswa_user_id')
-            ->join('pelanggarans', 'pelanggaran_siswas.pelanggaran_id', '=', 'pelanggarans.id')
-            ->select('users.name', DB::raw('SUM(pelanggarans.poin) as total_poin'))
-            ->groupBy('users.id', 'users.name')
-            ->orderByDesc('total_poin')
-            ->limit(5)
-            ->get();
+    // 4. Data Pelanggaran Teratas (Top 5 Paling Sering Terjadi)
+    // Menghitung jumlah kemunculan id pelanggaran di tabel pivot
+    $pelanggaranTeratas = \App\Models\Pelanggaran::select('pelanggarans.id', 'pelanggarans.nama_pelanggaran')
+        ->selectSub(function ($query) {
+            $query->from('catatan_pelanggaran')
+                ->whereColumn('pelanggaran_id', 'pelanggarans.id')
+                ->selectRaw('count(*)');
+        }, 'jumlah_kasus')
+        ->orderByDesc('jumlah_kasus')
+        ->limit(5)
+        ->get();
 
-        // 3. Data Pelanggaran Teratas (Top 5)
-        $pelanggaranTeratas = Pelanggaran::withCount('pelanggaranSiswa as jumlah_kasus')
-            ->orderByDesc('jumlah_kasus')
-            ->limit(5)
-            ->get();
+    // 5. Statistik Konsultasi
+    $permintaanBaru = \App\Models\Konsultasi::where('status', 'Menunggu Persetujuan')->count();
 
-        // ==========================================
-        // BAGIAN 2: STATISTIK KONSULTASI
-        // ==========================================
+    $jadwalHariIni = \App\Models\Konsultasi::where('status', 'Disetujui')
+        ->whereDate('jadwal_disetujui', \Carbon\Carbon::today())
+        ->count();
 
-        // 4. Hitung Permintaan Baru
-        $permintaanBaru = Konsultasi::where('status', 'Menunggu Persetujuan')->count();
+    $jadwalTerdekat = \App\Models\Konsultasi::where('status', 'Disetujui')
+        ->where('jadwal_disetujui', '>=', now())
+        ->with('siswa')
+        ->orderBy('jadwal_disetujui', 'asc')
+        ->limit(5)
+        ->get();
 
-        // 5. Hitung Jadwal Hari Ini
-        $jadwalHariIni = Konsultasi::where('status', 'Disetujui')
-            ->whereDate('jadwal_disetujui', Carbon::today())
-            ->count();
-
-        // 6. Ambil 5 Jadwal Terdekat
-        $jadwalTerdekat = Konsultasi::where('status', 'Disetujui')
-            ->where('jadwal_disetujui', '>=', now())
-            ->with('siswa')
-            ->orderBy('jadwal_disetujui', 'asc')
-            ->limit(5)
-            ->get();
-
-        // ==========================================
-        // BAGIAN 3: PENGIRIMAN DATA KE VIEW
-        // ==========================================
-        
-        // Pastikan nama variabel di sini SAMA PERSIS dengan di view blade kamu
-        return view('admin.dashboard', compact(
-            'totalSiswaAktif',
-            'totalPelanggaran',
-            'siswaPoinTertinggi',
-            'pelanggaranTeratas',
-            'permintaanBaru',
-            'jadwalHariIni',
-            'jadwalTerdekat'
-        ));
-    }
+    return view('admin.dashboard', compact(
+        'totalSiswaAktif',
+        'totalPelanggaran',
+        'siswaPoinTertinggi',
+        'pelanggaranTeratas',
+        'permintaanBaru',
+        'jadwalHariIni',
+        'jadwalTerdekat'
+    ));
+}
 }
