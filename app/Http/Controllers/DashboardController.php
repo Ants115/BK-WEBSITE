@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers; // Perhatikan namespace ini Polos
+namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Konsultasi;
 
 class DashboardController extends Controller
 {
@@ -11,21 +12,27 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Jika Role ADMIN
-        // Arahkan ke route khusus admin yang memakai controller Admin (No. 1)
-        if ($user->role == 'admin') {
+        // 1. Role ADMIN / GURU BK
+        if ($user->role == 'admin' || $user->role == 'guru_bk') {
             return redirect()->route('admin.dashboard');
         }
 
-        // 2. Jika Role WALI KELAS
-        // Arahkan ke route khusus wali yang memakai controller Wali (No. 2)
+        // 2. Role WALI KELAS
         if ($user->role == 'walikelas') {
             return redirect()->route('wali.dashboard');
         }
 
-        // 3. Jika SISWA (Default)
-        // Langsung tampilkan view dashboard siswa (karena siswa biasanya tidak butuh controller ribet)
-        // Atau buat SiswaDashboardController jika nanti butuh statistik
-        return view('dashboard'); 
+        // 3. Role SISWA
+        // Ambil SATU data terbaru saja pakai first()
+        try {
+            $konsultasiMendatang = Konsultasi::where('siswa_id', $user->id)
+                ->whereIn('status', ['menunggu', 'disetujui', 'dijadwalkan'])
+                ->orderBy('created_at', 'desc')
+                ->first(); // <--- KUNCI PERBAIKANNYA (Ganti get() jadi first())
+        } catch (\Exception $e) {
+            $konsultasiMendatang = null;
+        }
+
+        return view('dashboard', compact('user', 'konsultasiMendatang')); 
     }
 }

@@ -122,13 +122,29 @@
                         </h3>
 
                         <div class="flex flex-col items-center mb-6">
-                            {{-- Avatar Inisial Nama --}}
-                            <div class="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-3xl font-bold border-4 border-white shadow-lg mb-3">
-                                {{ substr($user->name, 0, 1) }}
-                            </div>
-                            <h4 class="text-lg font-bold text-gray-900 text-center">{{ $user->biodataSiswa->nama_lengkap ?? $user->name }}</h4>
-                            <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full mt-1">Siswa Aktif</span>
-                        </div>
+    {{-- Avatar Inisial Nama --}}
+    <div class="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-3xl font-bold border-4 border-white shadow-lg mb-3">
+        {{ substr($user->name, 0, 1) }}
+    </div>
+
+    {{-- Nama User --}}
+    <h4 class="text-lg font-bold text-gray-900 text-center">
+        {{ $user->biodataSiswa->nama_lengkap ?? $user->name }}
+    </h4>
+
+    {{-- LOGIKA STATUS: Ganti bagian badge statis dengan ini --}}
+    @if($user->biodataSiswa && $user->biodataSiswa->status === 'Lulus')
+        {{-- Tampilan Jika Lulus (Warna Abu-abu) --}}
+        <span class="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-bold rounded-full mt-1 border border-gray-300">
+            Alumni / Lulus
+        </span>
+    @else
+        {{-- Tampilan Jika Masih Aktif (Warna Hijau - Sesuai desain awalmu) --}}
+        <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full mt-1">
+            Siswa Aktif
+        </span>
+    @endif
+</div>
 
                         <div class="space-y-4">
                             <div class="flex justify-between border-b border-gray-50 pb-2">

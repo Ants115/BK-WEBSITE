@@ -27,15 +27,13 @@ class KelasController extends Controller
             $query->where('nama_kelas', 'like', "%{$search}%");
         }
 
-        // PERBAIKAN: Ubah nama variabel jadi $kelas (bukan $kelasList)
-        // Agar sesuai dengan View index.blade.php
         $kelas = $query
             ->orderBy('nama_kelas', 'asc')
             ->paginate(12)
             ->withQueryString();
 
         return view('admin.kelas.index', [
-            'kelas'  => $kelas, // <--- Ini yang bikin error tadi
+            'kelas'  => $kelas,
             'search' => $search,
         ]);
     }
@@ -48,7 +46,8 @@ class KelasController extends Controller
         $tingkatans = Tingkatan::orderBy('id')->get();
         $jurusans   = Jurusan::orderBy('id')->get();
 
-        $waliCandidates = User::whereIn('role', ['guru_bk', 'wali_kelas', 'staf_guru']) // Tambahkan staf_guru jika perlu
+        // PERBAIKAN DI SINI: Ubah 'wali_kelas' jadi 'walikelas' (sesuai database)
+        $waliCandidates = User::whereIn('role', ['guru_bk', 'walikelas', 'staf_guru']) 
             ->orderBy('name')
             ->get();
 
@@ -88,16 +87,15 @@ class KelasController extends Controller
     /**
      * Form edit kelas.
      */
-    public function edit(Kelas $kela) // Pastikan parameter di route list sesuai
+    public function edit(Kelas $kela) 
     {
-        // Jika route parameter kamu {kela}, maka variabel ini $kela
-        // Kita ubah jadi $kelas biar enak dipakai di view
         $kelas = $kela;
 
         $tingkatans = Tingkatan::orderBy('id')->get();
         $jurusans   = Jurusan::orderBy('id')->get();
 
-        $waliCandidates = User::whereIn('role', ['guru_bk', 'wali_kelas', 'staf_guru'])
+        // PERBAIKAN DI SINI JUGA: Ubah 'wali_kelas' jadi 'walikelas'
+        $waliCandidates = User::whereIn('role', ['guru_bk', 'walikelas', 'staf_guru'])
             ->orderBy('name')
             ->get();
 

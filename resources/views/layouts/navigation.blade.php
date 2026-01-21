@@ -19,7 +19,7 @@
     <div class="flex-1 overflow-y-auto py-6 px-3 space-y-1 bk-scroll">
         
         {{-- ================= LOGIKA MENU GURU BK (ADMIN) ================= --}}
-        @if ($user->role === 'guru_bk')
+        @if ($user->role === 'guru_bk' || $user->role === 'admin')
             
             {{-- Navigasi Utama --}}
             <div class="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Navigasi Utama</div>
@@ -71,7 +71,9 @@
             </a>
 
         {{-- ================= LOGIKA MENU WALI KELAS ================= --}}
-        @elseif ($user->role === 'wali_kelas')
+        {{-- PERBAIKAN: Ubah 'wali_kelas' jadi 'walikelas' --}}
+        @elseif ($user->role === 'walikelas') 
+            
             <div class="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Menu Wali Kelas</div>
             
             <a href="{{ route('wali.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('wali.dashboard') ? 'bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600' : 'text-slate-600 hover:bg-slate-50' }}">
@@ -81,28 +83,33 @@
 
         {{-- ================= LOGIKA MENU SISWA (DEFAULT) ================= --}}
         @else
-            <div class="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Menu Utama</div>
-
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('dashboard') ? 'bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600' : 'text-slate-600 hover:bg-slate-50' }}">
-                <i class="ri-home-smile-line text-lg"></i> <span>Dashboard</span>
-            </a>
-
-            {{-- Cek Status Kelulusan (Pagar Alumni) --}}
-            @if($user->biodataSiswa && $user->biodataSiswa->status !== 'Lulus')
-                <a href="{{ route('konsultasi.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('konsultasi.create') ? 'bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600' : 'text-slate-600 hover:bg-slate-50' }}">
-                    <i class="ri-add-circle-line text-lg"></i> <span>Buat Janji Temu</span>
-                </a>
-            @endif
-
-            <a href="{{ route('konsultasi.riwayat') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('konsultasi.riwayat') ? 'bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600' : 'text-slate-600 hover:bg-slate-50' }}">
-                <i class="ri-history-line text-lg"></i> <span>Riwayat Konsultasi</span>
-            </a>
-
-            <div class="px-3 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Akademik</div>
+            {{-- Kita kunci lagi biar aman, HANYA SISWA yang bisa lihat menu ini --}}
+            @if($user->role === 'siswa')
             
-            <a href="{{ route('siswa.prestasi.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('siswa.prestasi.*') ? 'bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600' : 'text-slate-600 hover:bg-slate-50' }}">
-                <i class="ri-medal-line text-lg"></i> <span>Prestasi Saya</span>
-            </a>
+                <div class="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Menu Utama</div>
+
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('dashboard') ? 'bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600' : 'text-slate-600 hover:bg-slate-50' }}">
+                    <i class="ri-home-smile-line text-lg"></i> <span>Dashboard</span>
+                </a>
+
+                {{-- Cek Status Kelulusan (Pagar Alumni) --}}
+                @if($user->biodataSiswa && $user->biodataSiswa->status !== 'Lulus')
+                    <a href="{{ route('konsultasi.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('konsultasi.create') ? 'bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600' : 'text-slate-600 hover:bg-slate-50' }}">
+                        <i class="ri-add-circle-line text-lg"></i> <span>Buat Janji Temu</span>
+                    </a>
+                @endif
+
+                <a href="{{ route('konsultasi.riwayat') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('konsultasi.riwayat') ? 'bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600' : 'text-slate-600 hover:bg-slate-50' }}">
+                    <i class="ri-history-line text-lg"></i> <span>Riwayat Konsultasi</span>
+                </a>
+
+                <div class="px-3 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Akademik</div>
+                
+                <a href="{{ route('siswa.prestasi.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('siswa.prestasi.*') ? 'bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600' : 'text-slate-600 hover:bg-slate-50' }}">
+                    <i class="ri-medal-line text-lg"></i> <span>Prestasi Saya</span>
+                </a>
+            
+            @endif
         @endif
 
     </div>

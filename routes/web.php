@@ -83,9 +83,7 @@ Route::middleware(['auth', 'role:walikelas'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    // /dashboard = router umum (nanti cek role di controller)
-    Route::get('/dashboard', [SiswaDashboardController::class, 'index'])
-        ->name('dashboard');
+    // KITA HAPUS DASHBOARD DISINI AGAR PAKAI YANG DI ATAS (SATPAM)
 
     // Notifikasi umum
     Route::patch('/notifikasi/{notifikasi}/tandai-dibaca', [NotifikasiController::class, 'tandaiDibaca'])
@@ -255,14 +253,12 @@ Route::middleware(['auth', 'verified', 'role:admin,guru_bk'])
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'verified', 'role:wali_kelas'])
-    ->prefix('wali-kelas')
-    ->name('wali.')
-    ->group(function () {
-        Route::get('/dashboard', [WaliDashboardController::class, 'index'])
-            ->name('dashboard');
+// PERBAIKAN: 'role:walikelas' (disambung, sesuai database)
+// 3. GROUP WALI KELAS
+// Pastikan tulisannya 'role:walikelas' (disambung, tanpa underscore)
+Route::middleware(['auth', 'role:walikelas'])->group(function () {
+    Route::get('/wali-kelas/dashboard', [WaliDashboard::class, 'index'])
+        ->name('wali.dashboard');
 
-        // route wali kelas lain taruh di sini
     });
-
 require __DIR__.'/auth.php';

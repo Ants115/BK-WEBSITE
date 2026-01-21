@@ -16,10 +16,9 @@ class StafGuruController extends Controller
     {
         $search = $request->query('search');
 
-        // TAMPILKAN: wali_kelas + staf_guru (+ optional guru_bk kalau mau)
+        // PERBAIKAN: Ubah 'wali_kelas' menjadi 'walikelas' (sesuai database)
         $query = User::with('biodataStaf')
-            ->whereIn('role', ['wali_kelas', 'staf_guru']); 
-            // kalau mau sekalian guru BK: ['wali_kelas', 'staf_guru', 'guru_bk']
+            ->whereIn('role', ['walikelas', 'staf_guru']); 
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -33,8 +32,8 @@ class StafGuruController extends Controller
         }
 
         $stafs = $query->orderBy('name')->paginate(15);
-        return view('Admin.staf-guru.index', [
-            'stafList' => $stafs,   // hasil paginate
+        return view('admin.staf-guru.index', [ // Perhatikan huruf kecil 'admin'
+            'stafList' => $stafs,   
             'search'   => $search,
         ]);
         
@@ -55,13 +54,17 @@ class StafGuruController extends Controller
             'nip'          => ['required', 'string', 'max:50', 'unique:biodata_staf,nip'],
             'nama_lengkap' => ['required', 'string', 'max:255'],
             'jabatan'      => ['nullable', 'string', 'max:100'],
+            'role'         => ['required', 'in:staf_guru,walikelas'], // Tambahkan pilihan role di form create nanti
         ]);
+
+        // Default role jika tidak dipilih (bisa disesuaikan)
+        $role = $request->input('role', 'staf_guru');
 
         $user = User::create([
             'name'     => $validated['name'],
             'email'    => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role'     => 'staf_guru',
+            'role'     => $role, 
         ]);
 
         BiodataStaf::create([
@@ -73,12 +76,13 @@ class StafGuruController extends Controller
 
         return redirect()
             ->route('admin.staf-guru.index')
-            ->with('success', 'Staf Guru berhasil ditambahkan.');
+            ->with('success', 'Data berhasil ditambahkan.');
     }
 
     public function edit(User $stafGuru): View
     {
-        abort_unless($stafGuru->role === 'staf_guru', 404);
+        // PERBAIKAN: Izinkan edit jika role-nya staf_guru ATAU walikelas
+        abort_unless(in_array($stafGuru->role, ['staf_guru', 'walikelas']), 404);
 
         $stafGuru->load('biodataStaf');
 
@@ -87,7 +91,8 @@ class StafGuruController extends Controller
 
     public function update(Request $request, User $stafGuru): RedirectResponse
     {
-        abort_unless($stafGuru->role === 'staf_guru', 404);
+        // PERBAIKAN: Izinkan update jika role-nya staf_guru ATAU walikelas
+        abort_unless(in_array($stafGuru->role, ['staf_guru', 'walikelas']), 404);
 
         $validated = $request->validate([
             'name'         => ['required', 'string', 'max:255'],
@@ -106,27 +111,30 @@ class StafGuruController extends Controller
                 : $stafGuru->password,
         ]);
 
-        if ($stafGuru->biodataStaf) {
-            $stafGuru->biodataStaf->update([
+        // Gunakan updateOrCreate agar aman jika biodataStaf belum ada sebelumnya
+        BiodataStaf::updateOrCreate(
+            ['user_id' => $stafGuru->id],
+            [
                 'nip'          => $validated['nip'],
                 'nama_lengkap' => $validated['nama_lengkap'],
                 'jabatan'      => $validated['jabatan'] ?? 'Staf Guru',
-            ]);
-        }
+            ]
+        );
 
         return redirect()
             ->route('admin.staf-guru.index')
-            ->with('success', 'Data Staf Guru berhasil diperbarui.');
+            ->with('success', 'Data berhasil diperbarui.');
     }
 
     public function destroy(User $stafGuru): RedirectResponse
     {
-        abort_unless($stafGuru->role === 'staf_guru', 404);
+        // PERBAIKAN: Izinkan hapus jika role-nya staf_guru ATAU walikelas
+        abort_unless(in_array($stafGuru->role, ['staf_guru', 'walikelas']), 404);
 
         $stafGuru->delete();
 
         return redirect()
             ->route('admin.staf-guru.index')
-            ->with('success', 'Staf Guru berhasil dihapus.');
+            ->with('success', 'Data berhasil dihapus.');
     }
 }

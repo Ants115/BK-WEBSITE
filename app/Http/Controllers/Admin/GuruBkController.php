@@ -80,15 +80,20 @@ class GuruBkController extends Controller
     /**
      * Form edit guru BK.
      */
-    public function edit(User $guruBk): View
-    {
-        abort_unless($guruBk->role === 'guru_bk', 404);
-
-        $guruBk->load('biodataStaf');
-
-        return view('admin.guru-bk.edit', compact('guruBk'));
+   public function edit(User $guruBk)
+{
+    // Pastikan role benar
+    if ($guruBk->role !== 'guru_bk') {
+        abort(404);
     }
 
+    $guruBk->load('biodataStaf'); // Load relasi jika ada
+
+    // Kita ubah nama variabelnya dari $guruBk menjadi $guru
+    return view('admin.guru-bk.edit', [
+        'guru' => $guruBk 
+    ]);
+}
     /**
      * Update data guru BK.
      */
