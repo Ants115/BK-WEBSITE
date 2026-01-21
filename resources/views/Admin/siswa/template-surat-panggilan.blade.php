@@ -16,22 +16,22 @@
     </style>
 </head>
 <body>
+{{-- KOP SURAT: Sesuaikan dengan nama sekolahmu --}}
+<div class="kop-surat">
+    <h1>SMK ANTARTIKA 1 SIDOARJO</h1>
+    <p>Jl. Siwalanpanji No. 06, Buduran, Sidoarjo | Telp: (031) 8962512</p>
+</div>
 
-    <div class="kop-surat">
-        <h1>SEKOLAH MENENGAH KEJURUAN ABC</h1>
-        <p>Jl. Pendidikan No. 123, Kota Malang, Jawa Timur | Telp: (0341) 123456</p>
-    </div>
-
-    <table>
-        <tr>
-            <td>Nomor</td>
-            <td>: 123/SP/SMK-ABC/IX/2025</td>
-        </tr>
-        <tr>
-            <td>Hal</td>
-            <td>: Panggilan Orang Tua/Wali Murid</td>
-        </tr>
-    </table>
+<table>
+    <tr>
+        <td>Nomor</td>
+        <td>: {{ $nomorSurat }}</td> {{-- Pakai variabel dari Controller --}}
+    </tr>
+    <tr>
+        <td>Hal</td>
+        <td>: Panggilan Orang Tua/Wali Murid</td>
+    </tr>
+</table>
 
     <div class="isi-surat">
         <p>Yth. Bapak/Ibu Orang Tua/Wali dari:</p>

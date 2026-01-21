@@ -166,24 +166,33 @@ Route::middleware(['auth', 'verified', 'role:admin,guru_bk'])
         // ==========================================
         // 3. MANAJEMEN SISWA & MUTASI
         // ==========================================
-        Route::resource('siswa', SiswaController::class);
 
-        // Mutasi / Pindah Kelas
-        Route::post('/siswa/update-kelas', [SiswaController::class, 'updateKelas'])
-            ->name('siswa.updateKelas');
+        // --- A. RUTE SPESIFIK (WAJIB DI ATAS RESOURCE) ---
 
-        // Cetak Surat
+        // Rute Cetak Surat Peringatan
         Route::get('siswa/{siswa}/cetak-surat-peringatan', [SiswaController::class, 'cetakSuratPeringatan'])
             ->name('siswa.cetakSuratPeringatan');
 
+        // Rute Cetak Panggilan Orang Tua (Hanya satu baris ini saja!)
+        Route::get('siswa/{siswa}/cetak-panggilan', [SiswaController::class, 'cetakPanggilanOrtu'])
+            ->name('siswa.cetakPanggilan');
+
+        // Rute Mutasi / Pindah Kelas
+        Route::post('siswa/update-kelas', [SiswaController::class, 'updateKelas'])
+            ->name('siswa.updateKelas');
+
+        // Rute Form Panggilan (Create & Store)
         Route::get('siswa/{siswa}/surat-panggilan/create', [SiswaController::class, 'createSuratPanggilan'])
             ->name('siswa.createSuratPanggilan');
 
         Route::post('siswa/{siswa}/surat-panggilan', [SiswaController::class, 'cetakSuratPanggilan'])
             ->name('siswa.cetakSuratPanggilan');
-            // Letakkan tepat di bawah route cetakSuratPeringatan (sekitar line 172)
-Route::get('siswa/{siswa}/cetak-panggilan', [SiswaController::class, 'cetakPanggilanOrtu'])
-    ->name('siswa.cetakPanggilan');
+
+
+        // --- B. RUTE RESOURCE (WAJIB DI PALING BAWAH) ---
+
+        // Dengan meletakkan ini di bawah, rute spesifik di atas tidak akan dianggap sebagai ID
+        Route::resource('siswa', SiswaController::class);
 
 
         // ==========================================

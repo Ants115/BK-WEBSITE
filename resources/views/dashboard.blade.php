@@ -55,54 +55,9 @@
             {{-- 3. STATISTIK RINGKAS --}}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
-                {{-- Card Konsultasi --}}
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-                        </div>
-                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Konsultasi</span>
-                    </div>
-                    <div class="flex items-end gap-2">
-                        <h3 class="text-3xl font-extrabold text-gray-900">
-                            {{ $totalPengajuan ?? '0' }}
-                        </h3>
-                        <span class="text-sm text-gray-500 mb-1">Kali</span>
-                    </div>
-                </div>
-
-                {{-- Card Prestasi --}}
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-green-50 text-green-600 rounded-xl">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        </div>
-                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Prestasi</span>
-                    </div>
-                    <div class="flex items-end gap-2">
-                        <h3 class="text-3xl font-extrabold text-gray-900">
-                            {{ $totalPrestasi ?? '0' }}
-                        </h3>
-                        <span class="text-sm text-gray-500 mb-1">Pencapaian</span>
-                    </div>
-                    {{-- Link ke prestasi index --}}
-                    <a href="{{ route('siswa.prestasi.index') }}" class="text-xs text-green-600 font-bold mt-2 block hover:underline">Lihat Detail &rarr;</a>
-                </div>
-
-                {{-- Card Pelanggaran --}}
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-red-50 text-red-600 rounded-xl">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                        </div>
-                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Poin Pelanggaran</span>
-                    </div>
-                    <div class="flex items-end gap-2">
-                        <h3 class="text-3xl font-extrabold text-gray-900">
-                            {{ $totalPoin ?? '0' }}
-                        </h3>
-                        <span class="text-sm text-gray-500 mb-1">Poin</span>
-                    </div>
+               
+                        
+                                
                     {{-- Progress Bar Visual --}}
                     <div class="mt-2 w-full bg-gray-100 rounded-full h-1.5">
                         <div class="bg-red-500 h-1.5 rounded-full" style="width: {{ min(($totalPoin ?? 0), 100) }}%"></div>
@@ -196,41 +151,39 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
-                                    {{-- Loop Data Pelanggaran (Menggunakan variabel lama: $user->pelanggaranSiswa) --}}
-                                    @forelse($user->pelanggaranSiswa as $item)
-                                        <tr class="hover:bg-gray-50 transition">
-                                            <td class="px-6 py-4 text-gray-600">
-                                                {{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d M Y') }}
-                                            </td>
-                                            <td class="px-6 py-4 font-medium text-gray-900">
-                                                {{ $item->pelanggaran->nama_pelanggaran ?? 'N/A' }}
-                                                @if($item->keterangan)
-                                                    <div class="text-xs text-gray-500 mt-1 italic">{{ $item->keterangan }}</div>
-                                                @endif
-                                            </td>
-                                            <td class="px-6 py-4 text-center">
-                                                <span class="inline-block px-2 py-1 bg-red-100 text-red-600 font-bold rounded">
-                                                    +{{ $item->pelanggaran->poin ?? 0 }}
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 text-gray-500">
-                                                {{ $item->pelapor->name ?? '-' }}
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        {{-- State Kosong --}}
-                                        <tr>
-                                            <td colspan="4" class="px-6 py-12 text-center">
-                                                <div class="flex flex-col items-center justify-center">
-                                                    <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-3">
-                                                        <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                    </div>
-                                                    <p class="text-gray-900 font-bold">Bersih! Tidak ada pelanggaran.</p>
-                                                    <p class="text-gray-500 text-xs mt-1">Pertahankan sikap baikmu di sekolah.</p>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforelse
+                                   @forelse($user->pelanggaranSiswa as $item)
+    <tr class="hover:bg-gray-50 transition">
+        {{-- 1. Tanggal dari Pivot --}}
+        <td class="px-6 py-4 text-gray-600">
+            {{ \Carbon\Carbon::parse($item->pivot->tanggal)->translatedFormat('d M Y') }}
+        </td>
+
+        {{-- 2. Nama Pelanggaran langsung dari $item --}}
+        <td class="px-6 py-4 font-medium text-gray-900">
+            {{ $item->nama_pelanggaran }}
+            
+            {{-- Keterangan dari Pivot --}}
+            @if($item->pivot->keterangan)
+                <div class="text-xs text-gray-500 mt-1 italic">{{ $item->pivot->keterangan }}</div>
+            @endif
+        </td>
+
+        {{-- 3. Poin dari Pivot agar Sinkron --}}
+        <td class="px-6 py-4 text-center">
+            <span class="inline-block px-2 py-1 bg-red-100 text-red-600 font-bold rounded">
+                +{{ $item->pivot->poin_saat_itu }}
+            </span>
+        </td>
+
+        {{-- 4. Pelapor (tetap sama jika relasi sudah benar) --}}
+        <td class="px-6 py-4 text-gray-500">
+            {{ $item->pivot->pelapor->name ?? '-' }}
+        </td>
+    </tr>
+@empty
+    {{-- State Kosong tetap sama --}}
+    ...
+@endforelse
                                 </tbody>
                             </table>
                         </div>

@@ -10,62 +10,37 @@ use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(): View
-    {
-        // Ambil user yang sedang login
-        $user = Auth::user();
+public function index(): View
+{
+    $user = Auth::user();
 
-        // Preload relasi yang dibutuhkan di dashboard
-        $user->load([
-            'biodataSiswa.kelas.waliKelas',          // data siswa + kelas + wali kelas
-            'pelanggaranSiswa.pelanggaran',         // untuk hitung poin
-            'pelanggaranSiswa.pelapor',             // nama guru pencatat
-            'prestasi',                             // untuk menghitung total prestasi
-        ]);
+    // Pastikan data terbaru di-load
+    $user->load(['biodataSiswa.kelas.waliKelas']);
 
-        // Jika statusnya 'Lulus', tampilkan dashboard alumni
-        if ($user->biodataSiswa && $user->biodataSiswa->status === 'Lulus') {
-            return view('alumni.dashboard', compact('user'));
-        }
+    // 1. POIN: Hitung langsung ke tabel pivot (catatan_pelanggaran)
+    $totalPoin = \DB::table('catatan_pelanggaran')
+        ->where('siswa_id', $user->id)
+        ->sum('poin_saat_itu');
 
-        // ==========================================
-        // KONSULTASI BK
-        // ==========================================
+    // 2. PRESTASI: Hitung langsung ke tabel prestasi
+    $totalPrestasi = \App\Models\Prestasi::where('siswa_id', $user->id)->count();
 
-        // Cek jadwal konsultasi mendatang (disetujui & tanggal >= sekarang)
-        $konsultasiMendatang = Konsultasi::where('siswa_id', $user->id)
-            ->where('status', 'Disetujui')
-            ->where('jadwal_disetujui', '>=', now())
-            ->orderBy('jadwal_disetujui', 'asc')
-            ->first();
+    // 3. KONSULTASI: Hitung langsung ke tabel konsultasi
+    $totalPengajuan = \App\Models\Konsultasi::where('siswa_id', $user->id)->count();
 
-        // Hitung total pengajuan konsultasi
-        $totalPengajuan = Konsultasi::where('siswa_id', $user->id)->count();
+    // 4. Jadwal Mendatang
+    $konsultasiMendatang = \App\Models\Konsultasi::where('siswa_id', $user->id)
+        ->where('status', 'Disetujui')
+        ->where('jadwal_disetujui', '>=', now())
+        ->orderBy('jadwal_disetujui', 'asc')
+        ->first();
 
-        // ==========================================
-        // PELANGGARAN & POIN
-        // ==========================================
-
-        $totalPoin = $user->pelanggaranSiswa->sum(function ($item) {
-            return $item->pelanggaran->poin ?? 0;
-        });
-
-        // ==========================================
-        // PRESTASI
-        // ==========================================
-
-        $totalPrestasi = $user->prestasi->count();
-
-        // ==========================================
-        // RETURN VIEW
-        // ==========================================
-
-        return view('dashboard', compact(
-            'user',
-            'totalPoin',
-            'konsultasiMendatang',
-            'totalPengajuan',
-            'totalPrestasi',
-        ));
-    }
+    return view('dashboard', compact(
+        'user',
+        'totalPoin',
+        'konsultasiMendatang',
+        'totalPengajuan',
+        'totalPrestasi',
+    ));
+}
 }

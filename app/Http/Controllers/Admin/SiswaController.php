@@ -258,15 +258,18 @@ public function cetakPanggilanOrtu(User $siswa)
 
     $siswa->load(['biodataSiswa.kelas.jurusan']);
 
+    // Tambahkan variabel pesan agar tidak error 'Undefined Variable $pesan'
+    $pesan = "Mengharap kehadiran Bapak/Ibu Orang Tua/Wali Murid pada hari dan jam kerja untuk membicarakan perihal kedisiplinan putra/putri Bapak/Ibu di sekolah.";
+
     $data = [
         'siswa' => $siswa,
         'tanggalCetak' => \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y'),
         'nomorSurat' => 'BK/P/' . date('Y') . '/' . rand(100, 999),
+        'pesan' => $pesan, // Kirim variabel pesan ke view
     ];
 
-    // Pastikan nama file sesuai: template-surat-panggilan.blade.php
+    // Pastikan path view sesuai dengan struktur folder kamu
     $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.siswa.template-surat-panggilan', $data);
-    
     $pdf->setPaper('A4', 'portrait');
 
     return $pdf->stream('Surat-Panggilan-' . $siswa->name . '.pdf');
