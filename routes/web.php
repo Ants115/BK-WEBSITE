@@ -181,6 +181,9 @@ Route::middleware(['auth', 'verified', 'role:admin,guru_bk'])
 
         Route::post('siswa/{siswa}/surat-panggilan', [SiswaController::class, 'cetakSuratPanggilan'])
             ->name('siswa.cetakSuratPanggilan');
+            // Letakkan tepat di bawah route cetakSuratPeringatan (sekitar line 172)
+Route::get('siswa/{siswa}/cetak-panggilan', [SiswaController::class, 'cetakPanggilanOrtu'])
+    ->name('siswa.cetakPanggilan');
 
 
         // ==========================================
@@ -196,6 +199,8 @@ Route::middleware(['auth', 'verified', 'role:admin,guru_bk'])
         // Transaksi Hapus Riwayat Pelanggaran
         Route::delete('/siswa/pelanggaran/{id}', [PelanggaranController::class, 'destroySiswaPelanggaran'])
             ->name('pelanggaran.destroySiswa');
+
+
 
 
         // ==========================================

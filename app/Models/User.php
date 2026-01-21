@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\BiodataStaf;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -45,9 +46,12 @@ class User extends Authenticatable
     /**
      * Riwayat pelanggaran siswa.
      */
-    public function pelanggaranSiswa(): HasMany
+   public function pelanggaranSiswa(): BelongsToMany
     {
-        return $this->hasMany(PelanggaranSiswa::class, 'siswa_user_id');
+        return $this->belongsToMany(Pelanggaran::class, 'catatan_pelanggaran', 'siswa_id', 'pelanggaran_id')
+                    ->withPivot('id', 'tanggal', 'keterangan', 'poin_saat_itu') // Ambil kolom tambahan di tabel tengah
+                    ->withTimestamps()
+                    ->orderByPivot('tanggal', 'desc');
     }
 
     /**

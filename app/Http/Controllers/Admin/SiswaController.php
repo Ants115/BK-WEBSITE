@@ -135,57 +135,56 @@ class SiswaController extends Controller
    /**
      * Menampilkan detail seorang siswa.
      */
-    public function show(User $siswa): View
-    {
-        if ($siswa->role !== 'siswa') {
-            abort(404);
-        }
-
-        // Load relasi yang dibutuhkan
-        $siswa->load([
-            'biodataSiswa.kelas',
-            'pelanggaranSiswa.pelanggaran',
-            'pelanggaranSiswa.pelapor',
-            'prestasi', 
-        ]);
-
-        // PERBAIKAN: Ambil data master pelanggaran (Ini yang bikin error tadi)
-        // Pastikan kamu sudah use App\Models\Pelanggaran; di paling atas file
-        $masterPelanggaran = Pelanggaran::orderBy('nama_pelanggaran')->get();
-
-        // Hitung total poin pelanggaran
-        $totalPoin = $siswa->pelanggaranSiswa->sum(function ($item) {
-            return $item->pelanggaran->poin ?? 0;
-        });
-        
-        // Logika Status Surat Peringatan
-        $jenisSurat = null;
-        if ($totalPoin >= 100) {
-            $jenisSurat = 'Surat Peringatan 3';
-        } elseif ($totalPoin >= 50) {
-            $jenisSurat = 'Surat Peringatan 2';
-        } elseif ($totalPoin >= 25) {
-            $jenisSurat = 'Surat Peringatan 1';
-        }
-
-        // Susun data prestasi (urutan terbaru di atas)
-        $prestasi = $siswa->prestasi()
-            ->orderBy('tanggal', 'desc')
-            ->get();
-
-        $totalPrestasi = $prestasi->count();
-
-        // Kirim semua variabel ke View, TERMASUK $masterPelanggaran
-        return view('admin.siswa.show', compact(
-            'siswa',
-            'masterPelanggaran', // <--- Wajib ada
-            'totalPoin',
-            'jenisSurat',
-            'prestasi',
-            'totalPrestasi'
-        ));
+  public function show(User $siswa): View
+{
+    if ($siswa->role !== 'siswa') {
+        abort(404);
     }
 
+    // 1. Perbaikan Load Relasi: Hapus .pelanggaran dan .pelapor
+    // Karena pelanggaranSiswa sekarang adalah relasi BelongsToMany ke model Pelanggaran
+    $siswa->load([
+        'biodataSiswa.kelas',
+        'pelanggaranSiswa', 
+        'prestasi', 
+    ]);
+
+    // 2. Ambil data master pelanggaran untuk dropdown di modal
+    $masterPelanggaran = Pelanggaran::orderBy('nama_pelanggaran')->get();
+
+    // 3. Perbaikan Hitung Total Poin: 
+    // Ambil poin dari kolom 'poin_saat_itu' yang ada di tabel pivot
+    $totalPoin = $siswa->pelanggaranSiswa->sum(function ($item) {
+        return $item->pivot->poin_saat_itu ?? 0;
+    });
+    
+    // 4. Logika Status Surat Peringatan
+    $jenisSurat = null;
+    if ($totalPoin >= 100) {
+        $jenisSurat = 'Surat Peringatan 3';
+    } elseif ($totalPoin >= 50) {
+        $jenisSurat = 'Surat Peringatan 2';
+    } elseif ($totalPoin >= 25) {
+        $jenisSurat = 'Surat Peringatan 1';
+    }
+
+    // 5. Ambil data prestasi
+    $prestasi = $siswa->prestasi()
+        ->orderBy('tanggal', 'desc')
+        ->get();
+
+    $totalPrestasi = $prestasi->count();
+
+    // 6. Kirim semua variabel ke View
+    return view('admin.siswa.show', compact(
+        'siswa',
+        'masterPelanggaran',
+        'totalPoin',
+        'jenisSurat',
+        'prestasi',
+        'totalPrestasi'
+    ));
+}
     public function edit(User $siswa): View
     {
         $kelas = \App\Models\Kelas::all();
@@ -212,44 +211,64 @@ class SiswaController extends Controller
         return redirect()->route('admin.siswa.index', ['kelas_id' => $kelasId])->with('success', 'Siswa dihapus.');
     }
 
-    public function cetakSuratPeringatan(User $siswa)
-    {
-        if ($siswa->role !== 'siswa') {
-            abort(404);
-        }
-
-        // Load relasi lengkap
-        $siswa->load(['biodataSiswa.kelas.jurusan', 'pelanggaranSiswa.pelanggaran']);
-
-        // Hitung Total Poin
-        $totalPoin = $siswa->pelanggaranSiswa->sum(fn ($item) => $item->pelanggaran->poin ?? 0);
-
-        // Tentukan Jenis Surat
-        $jenisSurat = null;
-        if ($totalPoin >= 100) $jenisSurat = 'SURAT PERINGATAN 3 (SP-3)';
-        elseif ($totalPoin >= 50) $jenisSurat = 'SURAT PERINGATAN 2 (SP-2)';
-        elseif ($totalPoin >= 25) $jenisSurat = 'SURAT PERINGATAN 1 (SP-1)';
-        else {
-            return redirect()->back()->with('error', 'Total poin siswa (' . $totalPoin . ') belum mencapai batas untuk menerbitkan surat peringatan.');
-        }
-
-        // Data yang dikirim ke View PDF
-        $data = [
-            'siswa' => $siswa,
-            'totalPoin' => $totalPoin,
-            'jenisSurat' => $jenisSurat,
-            'tanggalCetak' => Carbon::now()->locale('id')->isoFormat('D MMMM Y'),
-            'nomorSurat' => 'BK/' . date('Y') . '/' . rand(100, 999), // Contoh nomor surat random
-        ];
-
-        // Generate PDF
-        // Pastikan view ini kita buat di Langkah 2
-        $pdf = Pdf::loadView('admin.siswa.template-surat', $data);
-        
-        // Atur ukuran kertas F4 atau A4
-        $pdf->setPaper('A4', 'portrait');
-
-        // Stream (Tampilkan di browser)
-        return $pdf->stream('SP-' . $siswa->name . '.pdf');
+ public function cetakSuratPeringatan(User $siswa)
+{
+    if ($siswa->role !== 'siswa') {
+        abort(404);
     }
+
+    // 1. Perbaikan Load Relasi: Hapus .pelanggaran
+    $siswa->load(['biodataSiswa.kelas.jurusan', 'pelanggaranSiswa']);
+
+    // 2. Perbaikan Hitung Total Poin: Ambil dari pivot poin_saat_itu
+    $totalPoin = $siswa->pelanggaranSiswa->sum(fn ($item) => $item->pivot->poin_saat_itu ?? 0);
+
+    // 3. Tentukan Jenis Surat
+    $jenisSurat = null;
+    if ($totalPoin >= 100) $jenisSurat = 'SURAT PERINGATAN 3 (SP-3)';
+    elseif ($totalPoin >= 50) $jenisSurat = 'SURAT PERINGATAN 2 (SP-2)';
+    elseif ($totalPoin >= 25) $jenisSurat = 'SURAT PERINGATAN 1 (SP-1)';
+    else {
+        return redirect()->back()->with('error', 'Total poin siswa (' . $totalPoin . ') belum mencapai batas untuk menerbitkan surat peringatan.');
+    }
+
+    // Data yang dikirim ke View PDF
+    $data = [
+        'siswa' => $siswa,
+        'totalPoin' => $totalPoin,
+        'jenisSurat' => $jenisSurat,
+        'tanggalCetak' => \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y'),
+        'nomorSurat' => 'BK/' . date('Y') . '/' . rand(100, 999),
+    ];
+
+    // Generate PDF
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.siswa.template-surat', $data);
+    
+    // Atur ukuran kertas
+    $pdf->setPaper('A4', 'portrait');
+
+    // Tampilkan di browser
+    return $pdf->stream('SP-' . $siswa->name . '.pdf');
+}
+public function cetakPanggilanOrtu(User $siswa)
+{
+    if ($siswa->role !== 'siswa') {
+        abort(404);
+    }
+
+    $siswa->load(['biodataSiswa.kelas.jurusan']);
+
+    $data = [
+        'siswa' => $siswa,
+        'tanggalCetak' => \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y'),
+        'nomorSurat' => 'BK/P/' . date('Y') . '/' . rand(100, 999),
+    ];
+
+    // Pastikan nama file sesuai: template-surat-panggilan.blade.php
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.siswa.template-surat-panggilan', $data);
+    
+    $pdf->setPaper('A4', 'portrait');
+
+    return $pdf->stream('Surat-Panggilan-' . $siswa->name . '.pdf');
+}
 }

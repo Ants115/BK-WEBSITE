@@ -47,44 +47,46 @@
                                 </div>
                             </div>
 
-                            {{-- KARTU POIN PELANGGARAN --}}
-                            <div class="w-full mt-4 p-4 rounded-lg {{ $totalPoin > 0 ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200' }}">
-                                <div class="text-center">
-                                    <span class="block text-xs uppercase font-bold text-gray-500">Total Poin Pelanggaran</span>
-                                    <span class="block text-3xl font-extrabold {{ $totalPoin > 50 ? 'text-red-600' : ($totalPoin > 0 ? 'text-orange-500' : 'text-green-600') }}">
-                                        {{ $totalPoin }}
-                                    </span>
-                                </div>
-                                
-                                {{-- Status Surat Peringatan --}}
-                                @if($jenisSurat)
-                                    <div class="mt-3 text-center">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 animate-pulse">
-                                            ⚠️ {{ $jenisSurat }}
-                                        </span>
-                                        <div class="mt-2">
-                                            <a href="{{ route('admin.siswa.cetakSuratPeringatan', $siswa->id) }}" target="_blank" class="text-xs text-blue-600 hover:underline font-bold">
-                                                Cetak Surat Peringatan &rarr;
-                                            </a>
-                                        </div>
-                                    </div>
-                                @else
-                                    <div class="mt-2 text-center text-xs text-green-600 font-semibold">
-                                        Status Aman
-                                    </div>
-                                @endif
-                            </div>
+{{-- KARTU POIN PELANGGARAN --}}
+<div class="w-full mt-4 p-4 rounded-lg {{ $totalPoin > 0 ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200' }}">
+    <div class="text-center">
+        <span class="block text-xs uppercase font-bold text-gray-500">Total Poin Pelanggaran</span>
+        <span class="block text-3xl font-extrabold {{ $totalPoin > 50 ? 'text-red-600' : ($totalPoin > 0 ? 'text-orange-500' : 'text-green-600') }}">
+            {{ $totalPoin }}
+        </span>
+    </div>
 
-                            {{-- TOTAL PRESTASI (Opsional, biar imbang) --}}
-                            <div class="w-full mt-4 p-4 rounded-lg bg-blue-50 border border-blue-200">
-                                <div class="text-center">
-                                    <span class="block text-xs uppercase font-bold text-blue-500">Total Prestasi</span>
-                                    <span class="block text-3xl font-extrabold text-blue-600">
-                                        {{ $totalPrestasi }}
-                                    </span>
-                                </div>
-                            </div>
+    {{-- Status Surat Peringatan --}}
+    @if($jenisSurat)
+        <div class="mt-3 text-center">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 animate-pulse">
+                ⚠️ {{ $jenisSurat }}
+            </span>
+            <div class="mt-2 space-y-2">
+                <a href="{{ route('admin.siswa.cetakSuratPeringatan', $siswa->id) }}" target="_blank" class="block text-xs text-blue-600 hover:underline font-bold">
+                    Cetak Surat Peringatan &rarr;
+                </a>
+                <a href="{{ route('admin.siswa.cetakPanggilan', $siswa->id) }}" target="_blank" class="block text-xs text-red-600 hover:underline font-bold">
+                    Cetak Panggilan Orang Tua &rarr;
+                </a>
+            </div>
+        </div>
+    @else
+        <div class="mt-2 text-center text-xs text-green-600 font-semibold">
+            Status Aman
+        </div>
+    @endif
+</div> {{-- <--- PENUTUP KARTU POIN (Wajib ada di sini agar grid tidak pecah) --}}
 
+{{-- TOTAL PRESTASI --}}
+<div class="w-full mt-4 p-4 rounded-lg bg-blue-50 border border-blue-200">
+    <div class="text-center">
+        <span class="block text-xs uppercase font-bold text-blue-500">Total Prestasi</span>
+        <span class="block text-3xl font-extrabold text-blue-600">
+            {{ $totalPrestasi }}
+        </span>
+    </div>
+</div>
                         </div>
                     </div>
                 </div>
@@ -125,31 +127,39 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    @forelse ($siswa->pelanggaranSiswa as $history)
-                                        <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                {{ \Carbon\Carbon::parse($history->tanggal)->translatedFormat('d M Y') }}
-                                            </td>
-                                            <td class="px-6 py-4 text-sm text-gray-900">
-                                                <div class="font-bold">{{ $history->pelanggaran->nama_pelanggaran ?? 'Data Dihapus' }}</div>
-                                                <div class="text-xs text-gray-500">{{ $history->keterangan ?? '-' }}</div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-red-600">
-                                                +{{ $history->pelanggaran->poin ?? 0 }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <form action="{{ route('admin.pelanggaran.destroySiswa', $history->id) }}" method="POST" onsubmit="return confirm('Yakin hapus riwayat ini?');">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="text-gray-400 hover:text-red-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-400 italic">Belum ada pelanggaran.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
+    @forelse ($siswa->pelanggaranSiswa as $history)
+        <tr>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                {{-- Ambil tanggal dari tabel pivot --}}
+                {{ \Carbon\Carbon::parse($history->pivot->tanggal)->translatedFormat('d M Y') }}
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-900">
+                {{-- Nama pelanggaran langsung dari object $history --}}
+                <div class="font-bold">{{ $history->nama_pelanggaran }}</div>
+                
+                {{-- Keterangan ada di pivot --}}
+                <div class="text-xs text-gray-500">{{ $history->pivot->keterangan ?? '-' }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-red-600">
+                {{-- Poin saat itu ada di pivot --}}
+                +{{ $history->pivot->poin_saat_itu }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                {{-- ID untuk hapus juga ada di pivot --}}
+                <form action="{{ route('admin.pelanggaran.destroySiswa', $history->pivot->id) }}" method="POST" onsubmit="return confirm('Yakin hapus riwayat ini?');">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="text-gray-400 hover:text-red-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                </form>
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-400 italic">Belum ada pelanggaran.</td>
+        </tr>
+    @endforelse
+</tbody>
                             </table>
                         </div>
                     </div>
@@ -217,7 +227,7 @@
                 <div class="bg-red-600 px-4 py-3 text-white"><h3 class="text-lg font-bold">Catat Pelanggaran</h3></div>
                 <form action="{{ route('admin.pelanggaran.storeSiswa') }}" method="POST">
                     @csrf
-                    <input type="hidden" name="siswa_user_id" value="{{ $siswa->id }}">
+                    <input type="hidden" name="siswa_id" value="{{ $siswa->id }}">
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700">Jenis Pelanggaran</label>
