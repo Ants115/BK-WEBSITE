@@ -13,7 +13,8 @@ use App\Models\Jurusan;
 use App\Models\Pelanggaran;
 use App\Models\PelanggaranSiswa;
 use App\Models\Notifikasi;
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash; // <--- INI OBAT ERORNYA (JANGAN DIHAPUS)
 
 class DatabaseSeeder extends Seeder
 {
@@ -22,11 +23,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([
-            AdminUserSeeder::class,
-        ]);
-        
-        // Matikan pengecekan foreign key agar bisa truncate (bersihkan) tabel
+        // 1. Matikan pengecekan foreign key agar bisa truncate (bersihkan) tabel
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
         // 2. Bersihkan semua tabel terkait untuk memulai dari awal
@@ -37,9 +34,13 @@ class DatabaseSeeder extends Seeder
         Tingkatan::truncate();
         Jurusan::truncate();
         Pelanggaran::truncate();
+        PelanggaranSiswa::truncate();
+        Notifikasi::truncate();
+
+        // 3. Aktifkan kembali pengecekan foreign key
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
         
-        // 3. Panggil semua seeder yang dibutuhkan secara berurutan
-        // Pastikan file-file seeder ini ADA di folder database/seeders
+        // 4. Panggil semua seeder yang dibutuhkan secara berurutan
         $this->call([
             TingkatanSeeder::class,
             JurusanSeeder::class,
@@ -48,8 +49,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class, 
         ]);
 
-        // 4. Aktifkan kembali pengecekan foreign key
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        // 5. Tambah User Manual (Sekarang aman karena Hash sudah di-import)
         User::create([
             'name' => 'Bu Rani',
             'email' => 'rani.bk@sekolah.com',
@@ -65,6 +65,4 @@ class DatabaseSeeder extends Seeder
         ]);
         
     }
-
-
 }

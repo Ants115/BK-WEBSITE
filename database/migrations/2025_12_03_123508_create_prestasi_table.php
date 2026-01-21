@@ -11,25 +11,29 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('prestasi', function (Blueprint $table) {
-            $table->id();
+        // PENGAMAN: Cek dulu, jika tabel SUDAH ADA, jangan buat lagi (skip)
+        if (!Schema::hasTable('prestasi')) {
+            
+            Schema::create('prestasi', function (Blueprint $table) {
+                $table->id();
 
-            // Relasi ke users (siswa)
-            $table->foreignId('siswa_id')
-                ->constrained('users')
-                ->onDelete('cascade');
+                // Relasi ke users (siswa)
+                $table->foreignId('siswa_id')
+                    ->constrained('users')
+                    ->onDelete('cascade');
 
-            // Data prestasi
-            $table->string('nama_prestasi');
-            $table->string('jenis')->nullable();         // akademik / non-akademik / lainnya
-            $table->string('tingkat')->nullable();       // Sekolah / Kab / Prov / Nasional / dll
-            $table->string('pencapaian')->nullable();    // Juara 1, Harapan, Peserta, dll
-            $table->string('penyelenggara')->nullable();
-            $table->date('tanggal')->nullable();
-            $table->text('keterangan')->nullable();
+                // Data prestasi (sesuaikan dengan kolom yang kamu butuhkan)
+                $table->string('nama_prestasi'); // atau 'judul'
+                $table->string('jenis')->nullable();
+                $table->string('tingkat')->nullable();
+                $table->string('pencapaian')->nullable();
+                $table->string('penyelenggara')->nullable();
+                $table->date('tanggal')->nullable();
+                $table->text('keterangan')->nullable();
 
-            $table->timestamps();
-        });
+                $table->timestamps();
+            });
+        }
     }
 
     /**
