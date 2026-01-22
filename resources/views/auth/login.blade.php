@@ -21,7 +21,7 @@
                         Kembali ke Depan
                     </a>
                     <h2 class="mt-8 text-3xl font-extrabold text-gray-900">
-                        Selamat Datang Kembali! 👋
+                        Selamat Datang! 👋
                     </h2>
                     <p class="mt-2 text-sm text-gray-600">
                         Silakan masuk untuk mengakses layanan BK.

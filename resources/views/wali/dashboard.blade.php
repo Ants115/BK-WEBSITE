@@ -101,10 +101,10 @@
                                         </thead>
                                         <tbody class="bg-white divide-y divide-gray-200">
                                             @foreach($data['siswas'] as $i => $siswa)
-                                                @php
-                                                    $poin = $siswa->pelanggaranSiswa->sum(function ($item) {
-                                                        return $item->pelanggaran->poin ?? 0;
-                                                    });
+                                               @php
+                                                    // Langsung sum kolom 'poin' dari koleksi pelanggaranSiswa
+                                                    $poin = $siswa->pelanggaranSiswa->sum('poin');
+                                                    
                                                     $jumlahPrestasi = $siswa->prestasi->count();
                                                 @endphp
                                                 <tr>
