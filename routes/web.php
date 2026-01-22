@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\JadwalKonselingController;
 use App\Http\Controllers\Admin\PrestasiController;
 use App\Http\Controllers\Admin\LaporanKonsultasiController;
 
+
 // Konsultasi BK (dipakai siswa & admin)
 use App\Http\Controllers\KonsultasiController;
 
@@ -89,6 +90,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/notifikasi/{notifikasi}/tandai-dibaca', [NotifikasiController::class, 'tandaiDibaca'])
         ->name('notifikasi.tandaiDibaca');
 });
+Route::post('/get-nomor-kelas', [RegisteredUserController::class, 'getNomorKelas'])->name('get.nomor.kelas');
 
 /*
 |--------------------------------------------------------------------------

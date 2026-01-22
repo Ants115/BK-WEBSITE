@@ -3,7 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    {{-- PERBAIKAN 1: Meta Token CSRF (WAJIB ADA agar Dropdown Kelas & Form tidak error) --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <title>{{ config('app.name', 'Sistem BK') }}</title>
+
+    {{-- PERBAIKAN 2: Script Google Recaptcha ditaruh di sini agar rapi --}}
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -48,7 +55,7 @@
                             </div>
                         @endisset
 
-                        {{-- Judul global (kalau di file login/register sudah ada judul sendiri dan terasa dobel, boleh hapus bagian ini) --}}
+                        {{-- Judul global --}}
                         <h2 class="text-xl font-semibold text-slate-900 mb-1">
                             @yield('auth-title', 'Masuk ke sistem')
                         </h2>

@@ -3,8 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}"> {{-- PENTING UNTUK AJAX --}}
+    {{-- PENTING: Token ini wajib ada agar JavaScript bisa bicara dengan Server --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}"> 
+    
     <title>Daftar - SMK Antartika 1 Sidoarjo</title>
+
+    {{-- Script ReCaptcha dipindah ke Head agar lebih stabil --}}
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased text-gray-900 bg-gray-50">
@@ -58,7 +64,7 @@
                                placeholder="Nomor Induk Siswa">
                     </div>
 
-                    {{-- Tingkatan (ID DITAMBAHKAN) --}}
+                    {{-- Tingkatan --}}
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tingkatan</label>
                         <select name="tingkatan_id" id="tingkatan_id" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white cursor-pointer">
@@ -71,7 +77,7 @@
                         </select>
                     </div>
 
-                    {{-- Jurusan (ID DITAMBAHKAN) --}}
+                    {{-- Jurusan --}}
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Jurusan</label>
                         <select name="jurusan_id" id="jurusan_id" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white cursor-pointer">
@@ -84,12 +90,12 @@
                         </select>
                     </div>
 
-                    {{-- Nomor Kelas (ID DITAMBAHKAN & KOSONGKAN DI AWAL) --}}
+                    {{-- Nomor Kelas (DROPDOWN DINAMIS) --}}
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nomor Kelas</label>
+                        {{-- ID 'nama_unik' penting untuk JavaScript --}}
                         <select name="nama_unik" id="nama_unik" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-gray-100 cursor-not-allowed" disabled>
                             <option value="">Pilih Tingkat & Jurusan dulu</option>
-                            {{-- Opsi akan diisi oleh JavaScript --}}
                         </select>
                     </div>
 
@@ -109,8 +115,16 @@
                                placeholder="Ulangi password">
                     </div>
 
-                    {{-- Tombol --}}
+                    {{-- Tombol & Captcha --}}
                     <div class="md:col-span-2 mt-4">
+                        <div class="mb-3">
+                            {{-- Pastikan ENV RECAPTCHA sudah diisi --}}
+                            <div class="g-recaptcha" data-sitekey="{{ env('RECAPTCHA_SITE_KEY') }}"></div>
+
+                            @error('g-recaptcha-response')
+                                <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
                         <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none transition transform hover:-translate-y-0.5">
                             Daftar Sekarang
                         </button>
@@ -141,24 +155,30 @@
         </div>
     </div>
 
-    {{-- SCRIPT JAVASCRIPT UNTUK DROPDOWN DINAMIS --}}
+    {{-- SCRIPT JAVASCRIPT FIXED (SUDAH DIPERBAIKI) --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // 1. Definisikan Variabel dengan ID yang Benar
             const tingkatanSelect = document.getElementById('tingkatan_id');
             const jurusanSelect = document.getElementById('jurusan_id');
             const nomorKelasSelect = document.getElementById('nama_unik');
 
-            function checkAndFetchClasses() {
+            // Cek apakah elemen ada (Safety Check)
+            if (!tingkatanSelect || !jurusanSelect || !nomorKelasSelect) {
+                console.error("Salah satu ID dropdown tidak ditemukan. Cek HTML.");
+                return;
+            }
+
+            function ambilDataKelas() {
                 const tingkatanId = tingkatanSelect.value;
                 const jurusanId = jurusanSelect.value;
 
-                // Reset Dropdown Nomor Kelas
+                // Reset Tampilan Dropdown
                 nomorKelasSelect.innerHTML = '<option value="">Memuat data...</option>';
-                nomorKelasSelect.disabled = true;
+                nomorKelasSelect.disabled = true; // Matikan sementara loading
                 nomorKelasSelect.classList.add('bg-gray-100', 'cursor-not-allowed');
-                nomorKelasSelect.classList.remove('bg-white');
 
-                // Hanya fetch jika kedua dropdown sudah dipilih
+                // Hanya jalankan jika kedua dropdown sudah dipilih
                 if (tingkatanId && jurusanId) {
                     fetch('{{ route("get.nomor.kelas") }}', {
                         method: 'POST',
@@ -173,7 +193,7 @@
                     })
                     .then(response => response.json())
                     .then(data => {
-                        nomorKelasSelect.innerHTML = '<option value="">Pilih Nomor</option>';
+                        nomorKelasSelect.innerHTML = '<option value="">Pilih Nomor Kelas</option>';
                         
                         if (data.length > 0) {
                             data.forEach(nomor => {
@@ -182,12 +202,16 @@
                                 option.textContent = nomor;
                                 nomorKelasSelect.appendChild(option);
                             });
-                            // Aktifkan dropdown
-                            nomorKelasSelect.disabled = false;
+
+                            // --- BAGIAN INI YANG MEMBUAT DROPDOWN BISA DIKLIK ---
+                            // Kita aktifkan HANYA setelah data berhasil diterima
+                            nomorKelasSelect.disabled = false; 
                             nomorKelasSelect.classList.remove('bg-gray-100', 'cursor-not-allowed');
                             nomorKelasSelect.classList.add('bg-white');
+                            // ----------------------------------------------------
+                            
                         } else {
-                            nomorKelasSelect.innerHTML = '<option value="">Tidak ada kelas tersedia</option>';
+                            nomorKelasSelect.innerHTML = '<option value="">Kelas tidak tersedia</option>';
                         }
                     })
                     .catch(error => {
@@ -200,8 +224,8 @@
             }
 
             // Pasang Event Listener
-            tingkatanSelect.addEventListener('change', checkAndFetchClasses);
-            jurusanSelect.addEventListener('change', checkAndFetchClasses);
+            tingkatanSelect.addEventListener('change', ambilDataKelas);
+            jurusanSelect.addEventListener('change', ambilDataKelas);
         });
     </script>
 </body>
