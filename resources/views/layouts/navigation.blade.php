@@ -69,6 +69,9 @@
             <a href="{{ route('admin.staf-guru.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('admin.staf-guru.*') ? 'bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600' : 'text-slate-600 hover:bg-slate-50' }}">
                 <i class="ri-user-settings-line text-lg"></i> <span>Staf Guru</span>
             </a>
+            <x-nav-link :href="route('chat.index')" :active="request()->routeIs('chat.*')">
+                <i class="ri-message-3-line mr-2"></i> {{ __('Live Chat Siswa') }}
+            </x-nav-link>
 
         {{-- ================= LOGIKA MENU WALI KELAS ================= --}}
         {{-- PERBAIKAN: Ubah 'wali_kelas' jadi 'walikelas' --}}
@@ -108,6 +111,7 @@
                 <a href="{{ route('siswa.prestasi.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('siswa.prestasi.*') ? 'bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600' : 'text-slate-600 hover:bg-slate-50' }}">
                     <i class="ri-medal-line text-lg"></i> <span>Prestasi Saya</span>
                 </a>
+                
             
             @endif
         @endif

@@ -76,4 +76,14 @@ class User extends Authenticatable
     return $this->hasOne(BiodataStaf::class, 'user_id');
 }
 
+// Relasi untuk fitur Chat
+    public function pesanTerkirim()
+    {
+        return $this->hasMany(Pesan::class, 'pengirim_id');
+    }
+
+    public function pesanDiterima()
+    {
+        return $this->hasMany(Pesan::class, 'penerima_id');
+    }
 }

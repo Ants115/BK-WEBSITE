@@ -41,18 +41,22 @@ class PelanggaranController extends Controller
     /**
      * Simpan Master Pelanggaran Baru.
      */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'nama_pelanggaran' => 'required|string|max:255',
-            'poin' => 'required|integer|min:1',
-            'kategori' => 'required|string',
-        ]);
+ public function store(Request $request)
+{
+    $request->validate([
+        'nama_pelanggaran' => 'required|string|max:255',
+        // Tambahkan 'max:100' di baris bawah ini
+        'poin' => 'required|integer|min:1|max:100', 
+        'kategori' => 'required|string',
+    ], [
+        // Opsional: Tambahkan pesan error bahasa Indonesia
+        'poin.max' => 'Poin pelanggaran tidak boleh lebih dari 100!',
+    ]);
 
-        Pelanggaran::create($request->all());
+    Pelanggaran::create($request->all());
 
-        return redirect()->route('admin.pelanggaran.index')->with('success', 'Data pelanggaran berhasil ditambahkan.');
-    }
+    return redirect()->route('admin.pelanggaran.index')->with('success', 'Data pelanggaran berhasil ditambahkan.');
+}
 
     /**
      * Form Edit Master Pelanggaran.
@@ -66,17 +70,18 @@ class PelanggaranController extends Controller
      * Update Master Pelanggaran.
      */
     public function update(Request $request, Pelanggaran $pelanggaran)
-    {
-        $request->validate([
-            'nama_pelanggaran' => 'required|string|max:255',
-            'poin' => 'required|integer|min:1',
-            'kategori' => 'required|string',
-        ]);
+{
+    $request->validate([
+        'nama_pelanggaran' => 'required|string|max:255',
+        // Tambahkan 'max:100' di sini juga
+        'poin' => 'required|integer|min:1|max:100',
+        'kategori' => 'required|string',
+    ]);
 
-        $pelanggaran->update($request->all());
+    $pelanggaran->update($request->all());
 
-        return redirect()->route('admin.pelanggaran.index')->with('success', 'Data pelanggaran berhasil diupdate.');
-    }
+    return redirect()->route('admin.pelanggaran.index')->with('success', 'Data pelanggaran berhasil diupdate.');
+}
 
     /**
      * Hapus Master Pelanggaran.
@@ -122,12 +127,23 @@ class PelanggaranController extends Controller
         // 4. Update Total Poin (Logika Poin)
         // Kita simpan poin di biodata_siswa agar tabel users tetap bersih
         // Pastikan relasi biodataSiswa ada
-        if ($siswa->biodataSiswa) {
-            $siswa->biodataSiswa->poin_pelanggaran += $pelanggaran->poin;
-            $siswa->biodataSiswa->save();
-        } else {
-            // Jika belum punya biodata, abaikan dulu atau buat baru (opsional)
-        }
+        // ...
+if ($siswa->biodataSiswa) {
+    // Hitung dulu total calon poin baru
+    $total_baru = $siswa->biodataSiswa->poin_pelanggaran + $pelanggaran->poin;
+
+    // Cek apakah hasilnya lebih dari 100?
+    if ($total_baru > 100) {
+        // Jika lebih, paksa jadi 100 (Mentok)
+        $siswa->biodataSiswa->poin_pelanggaran = 100;
+    } else {
+        // Jika tidak, simpan hasil penjumlahannya
+        $siswa->biodataSiswa->poin_pelanggaran = $total_baru;
+    }
+
+    $siswa->biodataSiswa->save();
+}
+// ...
 
         return redirect()->back()->with('success', 'Pelanggaran berhasil dicatat.');
     }

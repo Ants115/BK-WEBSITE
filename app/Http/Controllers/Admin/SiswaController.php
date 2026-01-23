@@ -154,9 +154,15 @@ class SiswaController extends Controller
 
     // 3. Perbaikan Hitung Total Poin: 
     // Ambil poin dari kolom 'poin_saat_itu' yang ada di tabel pivot
-    $totalPoin = $siswa->pelanggaranSiswa->sum(function ($item) {
-        return $item->pivot->poin_saat_itu ?? 0;
-    });
+    // Cari bagian ini di dalam function show()
+$totalPoin = $siswa->pelanggaranSiswa->sum(function ($item) {
+    return $item->pivot->poin_saat_itu ?? 0;
+});
+
+
+if ($totalPoin > 100) {
+    $totalPoin = 100; 
+}
     
     // 4. Logika Status Surat Peringatan
     $jenisSurat = null;
@@ -221,7 +227,14 @@ class SiswaController extends Controller
     $siswa->load(['biodataSiswa.kelas.jurusan', 'pelanggaranSiswa']);
 
     // 2. Perbaikan Hitung Total Poin: Ambil dari pivot poin_saat_itu
-    $totalPoin = $siswa->pelanggaranSiswa->sum(fn ($item) => $item->pivot->poin_saat_itu ?? 0);
+   // Cari bagian ini di dalam function cetakSuratPeringatan()
+$totalPoin = $siswa->pelanggaranSiswa->sum(fn ($item) => $item->pivot->poin_saat_itu ?? 0);
+
+// --- TAMBAHKAN KODE INI TEPAT DIBAWAHNYA ---
+if ($totalPoin > 100) {
+    $totalPoin = 100;
+}
+// --------------------------------------------
 
     // 3. Tentukan Jenis Surat
     $jenisSurat = null;

@@ -22,6 +22,54 @@
         .bk-scroll::-webkit-scrollbar-thumb { background-color: rgba(148, 163, 184, 0.5); border-radius: 99px; }
     </style>
 </head>
+@if(Auth::user()->role === 'siswa') {{-- Hanya muncul di Siswa --}}
+    
+    {{-- 1. KOTAK CHAT (Default: Hidden) --}}
+    <div id="chat-popup" class="fixed bottom-24 right-6 w-80 h-96 bg-white shadow-2xl rounded-xl overflow-hidden z-50 hidden border border-gray-200 transition-all transform origin-bottom-right scale-95 opacity-0">
+        {{-- Load Widget via Iframe --}}
+        <iframe src="{{ route('chat.widget') }}" class="w-full h-full border-0"></iframe>
+    </div>
+
+    {{-- 2. TOMBOL BULAT --}}
+    <button onclick="toggleChat()" 
+        class="fixed bottom-6 right-6 w-14 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg z-50 flex items-center justify-center transition-transform hover:scale-110">
+        {{-- Ikon Chat --}}
+        <i class="ri-chat-3-line text-2xl" id="chat-icon-open"></i>
+        {{-- Ikon Close (Default: Hidden) --}}
+        <i class="ri-close-line text-2xl hidden" id="chat-icon-close"></i>
+    </button>
+
+    {{-- 3. JAVASCRIPT TOGGLE --}}
+    <script>
+        function toggleChat() {
+            const popup = document.getElementById('chat-popup');
+            const iconOpen = document.getElementById('chat-icon-open');
+            const iconClose = document.getElementById('chat-icon-close');
+
+            if (popup.classList.contains('hidden')) {
+                // Buka Chat
+                popup.classList.remove('hidden');
+                setTimeout(() => {
+                    popup.classList.remove('scale-95', 'opacity-0');
+                }, 10);
+                
+                // Ubah Ikon
+                iconOpen.classList.add('hidden');
+                iconClose.classList.remove('hidden');
+            } else {
+                // Tutup Chat
+                popup.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    popup.classList.add('hidden');
+                }, 200);
+
+                // Ubah Ikon
+                iconOpen.classList.remove('hidden');
+                iconClose.classList.add('hidden');
+            }
+        }
+    </script>
+@endif
 <body class="text-slate-800">
     <div class="min-h-screen flex flex-col md:flex-row">
 
